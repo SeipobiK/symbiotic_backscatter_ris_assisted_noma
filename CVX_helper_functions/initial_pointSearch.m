@@ -17,7 +17,7 @@ function [V_opt,epsln A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,o
 
    cvx_begin quiet   sdp
        % cvx_solver sedumi
-       cvx_solver mosek_4
+       cvx_solver mosek
        cvx_precision medium
         % cvx_precision high
         cvx_solver_settings( ...

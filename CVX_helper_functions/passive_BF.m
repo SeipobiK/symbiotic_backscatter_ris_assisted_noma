@@ -1,5 +1,8 @@
 function [V_opt,epsln A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_prev,status] = Passive_BF(para,w_k,G_all, g_1_all,...
     g_2_all,g_b_all,f1_all,f2_all,A_n_prev, B_n_prev, A_f_prev, B_f_prev,  A_c_prev_n, B_c_prev_n,epsln_1,V_eignemax)
+
+
+
    
    numClusters = 3; % Number of clusters
    N = para.N; % Number of BS antennas
@@ -14,11 +17,34 @@ function [V_opt,epsln A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,o
    % scal=1e+5;
    para.P_max = para.P_max;
 
+   for c=1:numClusters
+               H_n_p=G_all*f1_all{c}*w_k(:, c);
+               H_f_p=G_all*f2_all{c}*w_k(:, c);
+               H_fc_p=G_all*f2_all{c}*w_k(:, c);
+               H_nc_p=G_all*f1_all{c}*w_k(:, c);
+       
+           
+       
+               [J_t_n]=permut(H_n_p);
+               [J_t_f]=permut(H_f_p);
+               [J_t_nc]=permut(H_nc_p);
+               [J_t_fc]=permut(H_fc_p);
+       
+               J_r_n = permut(g_1_all{c}');
+               J_r_f = permut(g_2_all{c}');
+               J_r_nc = permut(g_b_all{c}');
+               J_r_fc = permut(g_b_all{c}');
+       
+               H_n{c}  = diag(g_1_all{c}'*J_r_n)*J_t_n*G_all*f1_all{c}*w_k(:, c);
+               H_f{c}  = diag(g_2_all{c}'*J_r_f)*J_t_f*G_all*f2_all{c}*w_k(:, c);
+               H_n_c{c} = diag(g_b_all{c}'*J_r_nc)*J_t_nc*G_all*f1_all{c}*w_k(:, c);
+               H_f_c{c} = diag(g_b_all{c}'*J_r_fc)*J_t_fc*G_all*f2_all{c}*w_k(:, c);  
+
+
+   end
+
    cvx_begin  quiet sdp
-       % cvx_solver sedumi
        cvx_solver mosek_4
-       % cvx_precision best
-       % cvx_precision high
        cvx_precision medium
        cvx_solver_settings( ...
            'MSK_DPAR_INTPNT_TOL_PFEAS', 1e-14, ...
@@ -51,28 +77,7 @@ function [V_opt,epsln A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,o
         subject to
   
            for c = 1:numClusters
-               H_n_p=G_all*f1_all{c}*w_k(:, c);
-               H_f_p=G_all*f2_all{c}*w_k(:, c);
-               H_fc_p=G_all*f2_all{c}*w_k(:, c);
-               H_nc_p=G_all*f1_all{c}*w_k(:, c);
-       
-           
-       
-               [J_t_n]=permut(H_n_p);
-               [J_t_f]=permut(H_f_p);
-               [J_t_nc]=permut(H_nc_p);
-               [J_t_fc]=permut(H_fc_p);
-       
-               J_r_n = permut(g_1_all{c}');
-               J_r_f = permut(g_2_all{c}');
-               J_r_nc = permut(g_b_all{c}');
-               J_r_fc = permut(g_b_all{c}');
-       
-               H_n{c}  = diag(g_1_all{c}'*J_r_n)*J_t_n*G_all*f1_all{c}*w_k(:, c);
-               H_f{c}  = diag(g_2_all{c}'*J_r_f)*J_t_f*G_all*f2_all{c}*w_k(:, c);
-               H_n_c{c} = diag(g_b_all{c}'*J_r_nc)*J_t_nc*G_all*f1_all{c}*w_k(:, c);
-               H_f_c{c} = diag(g_b_all{c}'*J_r_fc)*J_t_fc*G_all*f2_all{c}*w_k(:, c);  
-    
+               
                    A_n(c) >=1e-4;
                    B_n(c) >= 1e-4;
                    A_f(c) >= 1e-4;

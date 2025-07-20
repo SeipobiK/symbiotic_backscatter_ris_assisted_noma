@@ -14,7 +14,7 @@ function [W_opt, A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_pr
     para.P_max = para.P_max;
     % Initialize CVX variables
     cvx_begin  quiet
-        cvx_solver mosek_4
+        cvx_solver mosek
         cvx_precision high
 
         variable W(M,M,numClusters) Hermitian semidefinite
