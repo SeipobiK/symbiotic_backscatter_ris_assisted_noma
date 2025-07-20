@@ -108,7 +108,31 @@ for mc = 1:MC_MAX
     if ~converged
         warning('MC %d did not converge.', mc);
     end
-    obj_history(1:length(obj_history_mc), mc) = obj_history_mc;  % Store results
+    obj_history(1:length(obj_history_mc), mc) = obj_history_mc;  % Store 
+    
+    for k=1:numClusters
+        current_eig = eig(W_opt(:,:,k));
+        sorted_eig = sort(current_eig, 'descend');
+        eig_history{a, mc, k} = sorted_eig;
+    
+        % Correct dominance ratio
+        sum_except_max = sum(sorted_eig(2:end));
+        dominance_ratios(k, mc, a) = sorted_eig(1) / sum_except_max;
+        [V,D] = eig(W_opt(:,:,k));
+        max_eigs(k, mc, a) = sorted_eig(1);
+        sum_eigs(k, mc, a) = sum_except_max;
+
+        [max_eigenvalue, index] = max(diag(D)); % The diagonal of D contains the eigenvalues.
+        max_eigenvector =sqrt(max_eigenvalue) * V(:, index); % The corresponding column in V is the associated eigenvector.W
+        w_k{k}=max_eigenvector;
+        test=max_eigenvector*max_eigenvector';
+        test1=norm(test)^2;
+        test2=norm(W_opt(:,:,k))^2;
+        disp(['max_eigenvector ', num2str(k), ': ', num2str(test1)]);
+        disp(['W_opt norm ', num2str(k), ': ', num2str(test2)]);
+
+    
+    end
 
 end
 toc
