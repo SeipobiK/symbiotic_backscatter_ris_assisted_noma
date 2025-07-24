@@ -29,11 +29,11 @@ function [W_opt, A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt, obj_p
         disp(['Iteration: ', num2str(m), ' B_f_opt: ', num2str(B_f_opt')]);
         disp(['Iteration: ', num2str(m), ' A_c_n_opt: ', num2str(A_c_n_opt')]);
         disp(['Iteration: ', num2str(m), ' B_c_n_opt: ', num2str(B_c_n_opt')]);
-        disp(['Iteration: ', num2str(m), ', Objective Value: ', sprintf('%.10f', obj_prev)]);
+        disp(['Iteration: ', num2str(m), ', Objective Value: ', sprintf('%.15f', obj_prev)]);
         disp(['Iteration: ', num2str(m), ', Status: ', cvx_status]);
 
         % Check convergence
-        if strcmp(cvx_status, 'Solved') && abs(obj_prev) < 1e-7
+        if strcmp(cvx_status, 'Solved') && abs(obj_prev) < 1e-13
             disp('Convergence achieved.');
             disp(['Objective Value: ', num2str(obj_prev)]);
             converged = true;

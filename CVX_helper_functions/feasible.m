@@ -50,12 +50,12 @@ function [W_opt, A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_pr
                 % delta_g>=1e-6-B_c_n(c);
 
                 % Ensure that the slack variables are positive
-                A_n(c) >=1e-4; 
-                B_n(c) >= 1e-4;
-                A_f(c) >= 1e-4;
-                B_f(c) >= 1e-4;
-                A_c_n(c) >= 1e-4;
-                B_c_n(c) >= 1e-4;      
+                A_n(c) + delta_g >=1e-7; 
+                B_n(c) + delta_g >= 1e-7;
+                A_f(c) + delta_g>= 1e-7;
+                B_f(c) + delta_g>= 1e-7;
+                A_c_n(c) + delta_g>= 1e-7;
+                B_c_n(c) + delta_g>= 1e-7;      
 
                 taylor_approx_far(c) = log2(1 + inv_pos(A_f_prev(c) * B_f_prev(c))) -  ...
                                     (log2(exp(1)) * inv_pos(A_f_prev(c) * (1 + A_f_prev(c) * B_f_prev(c)))) * (A_f(c) - A_f_prev(c)) - ...

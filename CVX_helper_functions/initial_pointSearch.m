@@ -21,9 +21,9 @@ function [V_opt,epsln A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,o
        cvx_precision medium
         % cvx_precision high
         cvx_solver_settings( ...
-            'MSK_DPAR_INTPNT_TOL_PFEAS', 1e-13, ...
-            'MSK_DPAR_INTPNT_TOL_DFEAS', 1e-13, ...
-            'MSK_DPAR_INTPNT_TOL_REL_GAP', 1e-13 ...
+            'MSK_DPAR_INTPNT_TOL_PFEAS', 1e-14, ...
+            'MSK_DPAR_INTPNT_TOL_DFEAS', 1e-14, ...
+            'MSK_DPAR_INTPNT_TOL_REL_GAP', 1e-14 ...
         );
 
        %  (59h)
@@ -77,12 +77,12 @@ function [V_opt,epsln A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,o
                H_n_c{c} = diag(g_b_all{c}'*J_r_nc)*J_t_nc*G_all*f1_all{c}*w_k(:, c);
                H_f_c{c} = diag(g_b_all{c}'*J_r_fc)*J_t_fc*G_all*f2_all{c}*w_k(:, c);  
     
-                   A_n(c) >=1e-4;
-                   B_n(c) >= 1e-4;
-                   A_f(c) >= 1e-4;
-                   B_f(c) >= 1e-4;
-                   A_c_n(c) >= 1e-4;
-                   B_c_n(c) >= 1e-4;               
+                   A_n(c)+ delta_p >=1e-7;
+                   B_n(c)+ delta_p >= 1e-7;
+                   A_f(c)+ delta_p >= 1e-7;
+                   B_f(c)+ delta_p >= 1e-7;
+                   A_c_n(c)+ delta_p >= 1e-7;
+                   B_c_n(c)+ delta_p >= 1e-7;               
                    
                    taylor_approx_far(c) = log2(1 + inv_pos(A_f_prev(c) * B_f_prev(c))) -  ...
                     (log2(exp(1)) * inv_pos(A_f_prev(c) * (1 + A_f_prev(c) * B_f_prev(c)))) * (A_f(c) - A_f_prev(c)) - ...
@@ -158,12 +158,8 @@ function [V_opt,epsln A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,o
                    delta_p >= inter_cluster_interference_near_b + para.noise- B_c_n(c) ;
                    %% (59j)
 
-
-
-
-
            end
-        %    diag(V) == 1 + delta_p; 
+           diag(V) == 1 + delta_p; 
 
           for m=1:N
             V(m,m) == 1 + delta_p;
@@ -171,9 +167,9 @@ function [V_opt,epsln A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,o
 
         %    V_eignemax'*V_eignemax >=epsln_1*trace(V); % (59g)
 
-          for k = 1:numClusters
-            V + delta_p * eye(N) == hermitian_semidefinite(N);
-          end
+
+          V + delta_p * eye(N) == hermitian_semidefinite(N);
+          
    cvx_end
 
        obj_prev = cvx_optval;

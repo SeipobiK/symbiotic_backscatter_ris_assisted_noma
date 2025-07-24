@@ -3,24 +3,23 @@ function [values] = para_init()
     
     values.noise_dB = -90;% noise power in dB
     values.noise = 10^(values.noise_dB/10); 
-    values.alpha_k_n=0.4;
-    values.alpha_k_f=0.6;
+    values.alpha_k_n=0.1;
+    values.alpha_k_f=0.9;
     values.weights_n= 0.5; % weight for near user
     values.weights_f= 0.3; % weight for far user
     values.weights_c= 0.2; % weight for backscatter
     
     
-    values.M = 8
-    ; % overall antennas
-    values.RIS_size = [2,5]; % reflecting elements at RIS
+    values.M = 8; % overall antennas
+    values.RIS_size = [2,15]; % reflecting elements at RIS
     values.N = values.RIS_size(1)*values.RIS_size(2); % reflecting elements at RIS
     
     values.n = 1; % equivalent noise power
     values.K = 3; % user number
-    values.P_max = 1; % maximum transmit power in W
+    values.P_max = 50; % maximum transmit power in W
     values.eta = 0.5; % backscatter coefficient
-    values.R_min_f = 0.1; % minimum rate requirement in bps/Hz
-    values.R_min_n = 0.1; % minimum backscatter rate for near user in bps/Hz
+    values.R_min_f = 0.01; % minimum rate requirement in bps/Hz
+    values.R_min_n = 0.01; % minimum backscatter rate for near user in bps/Hz
     values.R_c_min = 0.001; % minimum backscatter rate for far user in bps/Hz
     values.nu_n = 1; % weight for near user
     

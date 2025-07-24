@@ -22,6 +22,12 @@ function [W_opt, A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_pr
         cvx_solver mosek
         % cvx_precision best
         % cvx_precision high
+        %  cvx_precision high
+        cvx_solver_settings( ...
+        'MSK_DPAR_INTPNT_TOL_PFEAS', 1e-14, ...
+        'MSK_DPAR_INTPNT_TOL_DFEAS', 1e-14, ...
+        'MSK_DPAR_INTPNT_TOL_REL_GAP', 1e-14 ...
+       );
 
         
         variable W(M,M,numClusters) Hermitian semidefinite
@@ -54,19 +60,19 @@ function [W_opt, A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_pr
 
 
             for c = 1:numClusters
-                    A_n(c) >=1e-4;
-                    B_n(c) >= 1e-4;
-                    A_f(c) >= 1e-4;
-                    B_f(c) >= 1e-4;
-                    A_c_n(c) >= 1e-4;
-                    B_c_n(c) >= 1e-4;
+                    A_n(c) >=1e-5;
+                    B_n(c) >= 1e-5;
+                    A_f(c) >= 1e-5;
+                    B_f(c) >= 1e-5;
+                    A_c_n(c) >= 1e-5;
+                    B_c_n(c) >= 1e-5;
 
-                        R_n(c) <= log2(1 + 1 ./ (A_f_prev(c) * B_f_prev(c))) -  ...
+                        R_f(c) <= log2(1 + 1 ./ (A_f_prev(c) * B_f_prev(c))) -  ...
                         (log2(exp(1)) * 1 ./ (A_f_prev(c) * (1 + A_f_prev(c) * B_f_prev(c)))) * (A_f(c) - A_f_prev(c)) - ...
                         (log2(exp(1)) * 1 ./ (B_f_prev(c) * (1 + A_f_prev(c) * B_f_prev(c)))) * (B_f(c) - B_f_prev(c));
 
                     
-                        R_f(c) <= log2(1 + 1 ./ (A_n_prev(c) * B_n_prev(c))) -  ...
+                        R_n(c) <= log2(1 + 1 ./ (A_n_prev(c) * B_n_prev(c))) -  ...
                         (log2(exp(1)) * 1 ./ (A_n_prev(c) * (1 + A_n_prev(c) * B_n_prev(c)))) * (A_n(c) - A_n_prev(c)) - ...
                         (log2(exp(1)) * 1 ./ (B_n_prev(c) * (1 + A_n_prev(c) * B_n_prev(c)))) * (B_n(c) - B_n_prev(c));
 
@@ -130,8 +136,6 @@ function [W_opt, A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_pr
                     inv_pos(A_c_n(c)) <= real(trace(W(:,:,c) * H_n_c{c}' * H_n_c{c})) * eta_k;
 
                     B_c_n(c) >= inter_cluster_interference_near_b + para.noise;
-
-
             end
 
     cvx_end

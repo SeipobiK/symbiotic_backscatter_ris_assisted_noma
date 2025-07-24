@@ -1,5 +1,5 @@
-function [V_opt,epsln A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_prev,status] = Passive_BF(para,w_k,G_all, g_1_all,...
-    g_2_all,g_b_all,f1_all,f2_all,A_n_prev, B_n_prev, A_f_prev, B_f_prev,  A_c_prev_n, B_c_prev_n,epsln_1,V_eignemax)
+function [V_opt,A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_prev,status] = Passive_BF(para,w_k,G_all, g_1_all,...
+    g_2_all,g_b_all,f1_all,f2_all,A_n_prev, B_n_prev, A_f_prev, B_f_prev,  A_c_prev_n, B_c_prev_n,V_max,epsln_1)
 
 
 
@@ -17,35 +17,47 @@ function [V_opt,epsln A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,o
    % scal=1e+5;
    para.P_max = para.P_max;
 
-   for c=1:numClusters
-               H_n_p=G_all*f1_all{c}*w_k(:, c);
-               H_f_p=G_all*f2_all{c}*w_k(:, c);
-               H_fc_p=G_all*f2_all{c}*w_k(:, c);
-               H_nc_p=G_all*f1_all{c}*w_k(:, c);
+%    for c=1:numClusters
+            %    H_n_p=G_all*f1_all{c}*w_k(:, c);
+            %    H_f_p=G_all*f2_all{c}*w_k(:, c);
+            %    H_fc_p=G_all*f2_all{c}*w_k(:, c);
+            %    H_nc_p=G_all*f1_all{c}*w_k(:, c);
        
            
        
-               [J_t_n]=permut(H_n_p);
-               [J_t_f]=permut(H_f_p);
-               [J_t_nc]=permut(H_nc_p);
-               [J_t_fc]=permut(H_fc_p);
+            %    [J_t_n]=permut(H_n_p);
+            %    [J_t_f]=permut(H_f_p);
+            %    [J_t_nc]=permut(H_nc_p);
+            %    [J_t_fc]=permut(H_fc_p);
        
-               J_r_n = permut(g_1_all{c}');
-               J_r_f = permut(g_2_all{c}');
-               J_r_nc = permut(g_b_all{c}');
-               J_r_fc = permut(g_b_all{c}');
+            %    J_r_n = permut(g_1_all{c}');
+            %    J_r_f = permut(g_2_all{c}');
+            %    J_r_nc = permut(g_b_all{c}');
+            %    J_r_fc = permut(g_b_all{c}');
+
+            % %   J_r_n = eye(N); % Assuming g_1_all{c} is a vector of size N
+            % %   J_r_f = eye(N); % Assuming g_2_all{c} is a vector of size N
+            % %   J_r_nc = eye(N); % Assuming g_b_all{c} is a vector of size N
+            % %   J_r_fc = eye(N); % Assuming g_b_all{c} is a vector of size N
+
+            % %   J_t_n = eye(N); % Assuming f1_all{c} is a vector of size N
+            % %   J_t_f = eye(N); % Assuming f2_all{c} is a vector of size N
+            % %   J_t_nc = eye(N); % Assuming f1_all{c} is a vector of size N
+            % %   J_t_fc = eye(N); % Assuming f2_all{c} is a vector of size N
+        
+
        
-               H_n{c}  = diag(g_1_all{c}'*J_r_n)*J_t_n*G_all*f1_all{c}*w_k(:, c);
-               H_f{c}  = diag(g_2_all{c}'*J_r_f)*J_t_f*G_all*f2_all{c}*w_k(:, c);
-               H_n_c{c} = diag(g_b_all{c}'*J_r_nc)*J_t_nc*G_all*f1_all{c}*w_k(:, c);
-               H_f_c{c} = diag(g_b_all{c}'*J_r_fc)*J_t_fc*G_all*f2_all{c}*w_k(:, c);  
+            %    H_n{c}  = diag(g_1_all{c}'*J_r_n)*J_t_n*G_all*f1_all{c}*w_k(:, c);
+            %    H_f{c}  = diag(g_2_all{c}'*J_r_f)*J_t_f*G_all*f2_all{c}*w_k(:, c);
+            %    H_n_c{c} = diag(g_b_all{c}'*J_r_nc)*J_t_nc*G_all*f1_all{c}*w_k(:, c);
+            %    H_f_c{c} = diag(g_b_all{c}'*J_r_fc)*J_t_fc*G_all*f2_all{c}*w_k(:, c);  
 
 
-   end
+%    end
 
    cvx_begin  quiet sdp
-       cvx_solver mosek_4
-       cvx_precision medium
+       cvx_solver mosek
+    %    cvx_precision medium
        cvx_solver_settings( ...
            'MSK_DPAR_INTPNT_TOL_PFEAS', 1e-14, ...
            'MSK_DPAR_INTPNT_TOL_DFEAS', 1e-14, ...
@@ -78,20 +90,54 @@ function [V_opt,epsln A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,o
   
            for c = 1:numClusters
                
-                   A_n(c) >=1e-4;
-                   B_n(c) >= 1e-4;
-                   A_f(c) >= 1e-4;
-                   B_f(c) >= 1e-4;
-                   A_c_n(c) >= 1e-4;
-                   B_c_n(c) >= 1e-4;
+                    A_n(c) >=1e-5;
+                    B_n(c) >= 1e-5;
+                    A_f(c) >= 1e-5;
+                    B_f(c) >= 1e-5;
+                    A_c_n(c) >= 1e-5;
+                    B_c_n(c) >= 1e-5;
+            %   H_n_p=G_all*f1_all{c}*w_k(:, c);
+            %    H_f_p=G_all*f2_all{c}*w_k(:, c);
+            %    H_fc_p=G_all*f2_all{c}*w_k(:, c);
+            %    H_nc_p=G_all*f1_all{c}*w_k(:, c);
+       
+           
+       
+            %    [J_t_n]=permut(H_n_p);
+            %    [J_t_f]=permut(H_f_p);
+            %    [J_t_nc]=permut(H_nc_p);
+            %    [J_t_fc]=permut(H_fc_p);
+       
+            %    J_r_n = permut(g_1_all{c}');
+            %    J_r_f = permut(g_2_all{c}');
+            %    J_r_nc = permut(g_b_all{c}');
+            %    J_r_fc = permut(g_b_all{c}');
+
+              J_r_n = eye(N); % Assuming g_1_all{c} is a vector of size N
+              J_r_f = eye(N); % Assuming g_2_all{c} is a vector of size N
+              J_r_nc = eye(N); % Assuming g_b_all{c} is a vector of size N
+              J_r_fc = eye(N); % Assuming g_b_all{c} is a vector of size N
+
+              J_t_n = eye(N); % Assuming f1_all{c} is a vector of size N
+              J_t_f = eye(N); % Assuming f2_all{c} is a vector of size N
+              J_t_nc = eye(N); % Assuming f1_all{c} is a vector of size N
+              J_t_fc = eye(N); % Assuming f2_all{c} is a vector of size N
+        
+
+       
+               H_n{c}  = diag(g_1_all{c}'*J_r_n)*J_t_n*G_all*f1_all{c}*w_k(:, c);
+               H_f{c}  = diag(g_2_all{c}'*J_r_f)*J_t_f*G_all*f2_all{c}*w_k(:, c);
+               H_n_c{c} = diag(g_b_all{c}'*J_r_nc)*J_t_nc*G_all*f1_all{c}*w_k(:, c);
+               H_f_c{c} = diag(g_b_all{c}'*J_r_fc)*J_t_fc*G_all*f2_all{c}*w_k(:, c);  
+
 
                        % (53b) for i=f
-                       R_n(c) <= log2(1 + 1 ./ (A_f_prev(c) * B_f_prev(c))) -  ...
+                       R_f(c) <= log2(1 + 1 ./ (A_f_prev(c) * B_f_prev(c))) -  ...
                        (log2(exp(1)) * 1 ./ (A_f_prev(c) * (1 + A_f_prev(c) * B_f_prev(c)))) * (A_f(c) - A_f_prev(c)) - ...
                        (log2(exp(1)) * 1 ./ (B_f_prev(c) * (1 + A_f_prev(c) * B_f_prev(c)))) * (B_f(c) - B_f_prev(c));
 
                        % (53b) for i=n
-                       R_f(c) <= log2(1 + 1 ./ (A_n_prev(c) * B_n_prev(c))) -  ...
+                       R_n(c) <= log2(1 + 1 ./ (A_n_prev(c) * B_n_prev(c))) -  ...
                        (log2(exp(1)) * 1 ./ (A_n_prev(c) * (1 + A_n_prev(c) * B_n_prev(c)))) * (A_n(c) - A_n_prev(c)) - ...
                        (log2(exp(1)) * 1 ./ (B_n_prev(c) * (1 + A_n_prev(c) * B_n_prev(c)))) * (B_n(c) - B_n_prev(c));
 
@@ -114,8 +160,8 @@ function [V_opt,epsln A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,o
                        if j ~= c
                            % Near user inter cluster interference  
 
-                           disp(size(V));
-                           disp(size((diag(g_1_all{c}'*J_r_n)*J_t_n*G_all*f1_all{c}*w_k(:, j))));
+                        %    disp(size(V));
+                        %    disp(size((diag(g_1_all{c}'*J_r_n)*J_t_n*G_all*f1_all{c}*w_k(:, j))));
                            inter_cluster_interference_near = inter_cluster_interference_near + ...
                                real(trace(V * (diag(g_1_all{c}'*J_r_n)*J_t_n*G_all*f1_all{c}*w_k(:, j)) * (diag(g_1_all{c}'*J_r_n)*J_t_n*G_all*f1_all{c}*w_k(:, j))'));
 
@@ -158,13 +204,16 @@ function [V_opt,epsln A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,o
                    B_c_n(c) >= inter_cluster_interference_near_b + para.noise;
                    %% (59j)
            end
-           % diag(V) == ones(N,1);
+            diag(V) == ones(N,1);                      % Diagonal = 1
+                                   % Ensure PSD
+            % for i = 1:N
+            %     for j = i+1:N
+            %         abs(V(i,j)) <= 1;                  % Explicit off-diagonal constraint
+            %     end
+            % end
 
-           for m=1:N
-               V(m,m) == 1;
-           end
-
-           % V_eignemax'*V_eignemax >=epsln_1*trace(V); % (59g)
+  
+           V_max>=epsln_1*trace(V); % (59g)
    cvx_end
 
        obj_prev = cvx_optval;
@@ -176,6 +225,4 @@ function [V_opt,epsln A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,o
        B_c_n_opt = B_c_n;
        V_opt = V;
        status = cvx_status;
-       epsln = epsln_1; 
-
 end
