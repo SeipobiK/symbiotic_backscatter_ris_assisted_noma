@@ -1,7 +1,7 @@
-function [W_opt, A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_prev,status] = feasible(para,W_init,H_n, H_f, H_n_c, H_f_c,A_n_prev, B_n_prev, A_f_prev, B_f_prev,  A_c_prev_n, B_c_prev_n)
+function [W_opt, A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_prev,status] = feasible(para,H_n, H_f, H_n_c, H_f_c,A_n_prev, B_n_prev, A_f_prev, B_f_prev,  A_c_prev_n, B_c_prev_n)
     % Extract configuration parameters
 
-    numClusters = 3; % Number of clusters
+    numClusters = 2; % Number of clusters
     M = para.M; % Number of BS antennas
     alpha_n = para.alpha_k_n; % Near user path loss factor
     alpha_f = para.alpha_k_f; % Far user path loss factor

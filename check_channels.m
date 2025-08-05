@@ -1,27 +1,26 @@
-% 1. Create a completely new figure with barebones settings
-f = figure('Visible','off', 'MenuBar','none', 'ToolBar','none', ...
-           'Color','w', 'Renderer','painters', 'IntegerHandle','off');
+% Coordinates
+BS = [0, 0, 15];
+RIS = [35, 20, 15];
+BD1 = [30, 5, 0];
+BD2 = [40, 5, 0];
 
-% 2. Use primitive plotting (no fancy stuff)
-h = plot(1:max_iter, avg_obj_history, '-o', ...  % Solid lines + circles
-         'LineWidth', 3, ...                     % Thick lines
-         'MarkerSize', 8, ...                    % Big markers
-         'MarkerFaceColor','auto');               % Filled markers
+% Function to compute azimuth and elevation
+ang = @(v) [atan2(v(2), v(1)), atan2(v(3), sqrt(v(1)^2 + v(2)^2))];
 
-% 3. Manual axis styling (no auto settings)
-set(gca, 'XLim',[1 max_iter], ...
-         'YLim',[0 max(avg_obj_history(:))*1.1], ...
-         'Box','on', ...
-         'FontSize',12);
+% 1. AoD from BS to RIS
+v1 = RIS - BS;
+[a1, e1] = deal(ang(v1));
+fprintf('AoD BS->RIS: Az = %.2f°, El = %.2f°\n', rad2deg(a1), rad2deg(e1));
 
-% 4. Save using low-level print command
-print(f, 'CONVERGENCE_PLOT_FINAL.png', '-dpng', '-r300', '-opengl');
-close(f);
+% 2. AoA at RIS from BS (same vector)
+fprintf('AoA RIS<-BS: Az = %.2f°, El = %.2f°\n', rad2deg(a1), rad2deg(e1));
 
-% 5. Verify the file exists
-if exist('CONVERGENCE_PLOT_FINAL.png','file')
-    disp('Plot definitely saved - check your current folder');
-    winopen(pwd);  % Open folder to view
-else
-    disp('This should never happen - check filesystem permissions');
-end
+% 3. AoD from RIS to BD1
+v2 = BD1 - RIS;
+[a2, e2] = deal(ang(v2));
+fprintf('AoD RIS->BD1: Az = %.2f°, El = %.2f°\n', rad2deg(a2), rad2deg(e2));
+
+% 4. AoD from RIS to BD2
+v3 = BD2 - RIS;
+[a3, e3] = deal(ang(v3));
+fprintf('AoD RIS->BD2: Az = %.2f°, El = %.2f°\n', rad2deg(a3), rad2deg(e3));

@@ -4,7 +4,7 @@ function [V_opt,A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_pre
 
 
    
-   numClusters = 3; % Number of clusters
+   numClusters = 2; % Number of clusters
    N = para.N; % Number of BS antennas
    alpha_n = para.alpha_k_n; % Near user path loss factor
    alpha_f = para.alpha_k_f; % Far user path loss factor
@@ -90,28 +90,28 @@ function [V_opt,A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_pre
   
            for c = 1:numClusters
                
-                    A_n(c) >=1e-5;
-                    B_n(c) >= 1e-5;
-                    A_f(c) >= 1e-5;
-                    B_f(c) >= 1e-5;
-                    A_c_n(c) >= 1e-5;
-                    B_c_n(c) >= 1e-5;
-            %   H_n_p=G_all*f1_all{c}*w_k(:, c);
-            %    H_f_p=G_all*f2_all{c}*w_k(:, c);
-            %    H_fc_p=G_all*f2_all{c}*w_k(:, c);
-            %    H_nc_p=G_all*f1_all{c}*w_k(:, c);
+                    % A_n(c) >=1e-5;
+                    % B_n(c) >= 1e-5;
+                    % A_f(c) >= 1e-5;
+                    % B_f(c) >= 1e-5;
+                    % A_c_n(c) >= 1e-5;
+                    % B_c_n(c) >= 1e-5;
+               H_n_p=G_all*f1_all{c}*w_k(:, c);
+               H_f_p=G_all*f2_all{c}*w_k(:, c);
+               H_fc_p=G_all*f2_all{c}*w_k(:, c);
+               H_nc_p=G_all*f1_all{c}*w_k(:, c);
        
            
        
-            %    [J_t_n]=permut(H_n_p);
-            %    [J_t_f]=permut(H_f_p);
-            %    [J_t_nc]=permut(H_nc_p);
-            %    [J_t_fc]=permut(H_fc_p);
+               [J_t_n]=permut(H_n_p);
+               [J_t_f]=permut(H_f_p);
+               [J_t_nc]=permut(H_nc_p);
+               [J_t_fc]=permut(H_fc_p);
        
-            %    J_r_n = permut(g_1_all{c}');
-            %    J_r_f = permut(g_2_all{c}');
-            %    J_r_nc = permut(g_b_all{c}');
-            %    J_r_fc = permut(g_b_all{c}');
+               J_r_n = permut_JT(g_1_all{c}');
+               J_r_f = permut_JT(g_2_all{c}');
+               J_r_nc = permut_JT(g_b_all{c}');
+               J_r_fc = permut_JT(g_b_all{c}');
 
               J_r_n = eye(N); % Assuming g_1_all{c} is a vector of size N
               J_r_f = eye(N); % Assuming g_2_all{c} is a vector of size N
@@ -212,8 +212,8 @@ function [V_opt,A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_pre
             %     end
             % end
 
-  
-           V_max>=epsln_1*trace(V); % (59g)
+           V_max'*V*V_max>=epsln_1*trace(V); % (59g)
+
    cvx_end
 
        obj_prev = cvx_optval;

@@ -1,7 +1,7 @@
-function [V_opt,epsln A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_prev,status] = initial_pointSearch(para,w_k,G_all, g_1_all,...
+function [V_opt,epsln,A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_prev,status] = initial_pointSearch(para,w_k,G_all, g_1_all,...
     g_2_all,g_b_all,f1_all,f2_all,A_n_prev, B_n_prev, A_f_prev, B_f_prev,  A_c_prev_n, B_c_prev_n,epsln_1,V_eignemax)
    
-   numClusters = 3; % Number of clusters
+   numClusters  = para.K;% Number of clusters
    N = para.N; % Number of BS antennas
    M = para.M; % Number of BS antennas
    alpha_n = para.alpha_k_n; % Near user path loss factor
@@ -18,13 +18,13 @@ function [V_opt,epsln A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,o
    cvx_begin quiet   sdp
        % cvx_solver sedumi
        cvx_solver mosek
-       cvx_precision medium
-        % cvx_precision high
-        cvx_solver_settings( ...
-            'MSK_DPAR_INTPNT_TOL_PFEAS', 1e-14, ...
-            'MSK_DPAR_INTPNT_TOL_DFEAS', 1e-14, ...
-            'MSK_DPAR_INTPNT_TOL_REL_GAP', 1e-14 ...
-        );
+       cvx_precision high
+       cvx_precision high
+        % cvx_solver_settings( ...
+        %     'MSK_DPAR_INTPNT_TOL_PFEAS', 1e-14, ...
+        %     'MSK_DPAR_INTPNT_TOL_DFEAS', 1e-14, ...
+        %     'MSK_DPAR_INTPNT_TOL_REL_GAP', 1e-14 ...
+        % );
 
        %  (59h)
        variable V(N,N) Hermitian semidefinite  
@@ -66,10 +66,10 @@ function [V_opt,epsln A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,o
                [J_t_nc]=permut(H_nc_p);
                [J_t_fc]=permut(H_fc_p);
        
-               [J_r_n]= permut(g_1_all{c}');
-               [J_r_f] = permut(g_2_all{c}');
-               [J_r_nc]= permut(g_b_all{c}');
-               [J_r_fc] = permut(g_b_all{c}');
+               J_r_n = permut_JT(g_1_all{c}');
+               J_r_f = permut_JT(g_2_all{c}');
+               J_r_nc = permut_JT(g_b_all{c}');
+               J_r_fc = permut_JT(g_b_all{c}');
        
                H_n{c}  = diag(g_1_all{c}'*J_r_n)*J_t_n*G_all*f1_all{c}*w_k(:, c);
             %    disp(H_n{c});
@@ -159,7 +159,7 @@ function [V_opt,epsln A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,o
                    %% (59j)
 
            end
-           diag(V) == 1 + delta_p; 
+        %    diag(V) == 1 + delta_p; 
 
           for m=1:N
             V(m,m) == 1 + delta_p;

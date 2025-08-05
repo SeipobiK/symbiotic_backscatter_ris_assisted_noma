@@ -1,11 +1,11 @@
 function [W_opt, A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt, obj_prev, cvx_status, converged] = ...
-    find_feasible_solution(para, W_init, H_n, H_f, H_nc, H_fc, A_n_prev, B_n_prev, A_f_prev, B_f_prev, A_c_prev_n, B_c_prev_n, max_inner_iters)
+    find_feasible_solution(para, H_n, H_f, H_nc, H_fc, A_n_prev, B_n_prev, A_f_prev, B_f_prev, A_c_prev_n, B_c_prev_n, max_inner_iters)
 
     converged = false;
 
     % First feasibility check
     [W_opt, A_n, B_n, A_f, B_f, A_cn, B_cn, obj_prev, cvx_status] = ...
-        feasible(para, W_init, H_n, H_f, H_nc, H_fc, A_n_prev, B_n_prev, A_f_prev, B_f_prev, A_c_prev_n, B_c_prev_n);
+        feasible(para,H_n, H_f, H_nc, H_fc, A_n_prev, B_n_prev, A_f_prev, B_f_prev, A_c_prev_n, B_c_prev_n);
 
     if ~strcmp(cvx_status, 'Solved')
         warning('Feasible point not found.');
@@ -15,7 +15,7 @@ function [W_opt, A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt, obj_p
     % Inner optimization loop
     for m = 1:max_inner_iters
         [W_opt, A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt, obj_prev, cvx_status] = ...
-            feasible(para, W_opt, H_n, H_f, H_nc, H_fc, A_n, B_n, A_f, B_f, A_cn, B_cn);
+            feasible(para, H_n, H_f, H_nc, H_fc, A_n, B_n, A_f, B_f, A_cn, B_cn);
 
         % Update Taylor approximation parameters
         A_n = A_n_opt; B_n = B_n_opt;

@@ -1,7 +1,7 @@
-function [W_opt, A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_prev,status] = update(para,W_init,H_n, H_f, H_n_c, H_f_c,A_n_prev, B_n_prev, A_f_prev, B_f_prev,  A_c_prev_n, B_c_prev_n)
+function [W_opt, A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_prev,status] = update(para,H_n, H_f, H_n_c, H_f_c,A_n_prev, B_n_prev, A_f_prev, B_f_prev,  A_c_prev_n, B_c_prev_n)
     % Extract configuration parameters
 
-    numClusters = 3; % Number of clusters
+    numClusters = 2; % Number of clusters
     M = para.M; % Number of BS antennas
     alpha_n = para.alpha_k_n; % Near user path loss factor
     alpha_f = para.alpha_k_f; % Far user path loss factor
@@ -22,7 +22,7 @@ function [W_opt, A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_pr
         cvx_solver mosek
         % cvx_precision best
         % cvx_precision high
-        %  cvx_precision high
+        cvx_precision high
         cvx_solver_settings( ...
         'MSK_DPAR_INTPNT_TOL_PFEAS', 1e-14, ...
         'MSK_DPAR_INTPNT_TOL_DFEAS', 1e-14, ...
@@ -60,13 +60,6 @@ function [W_opt, A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_pr
 
 
             for c = 1:numClusters
-                    A_n(c) >=1e-5;
-                    B_n(c) >= 1e-5;
-                    A_f(c) >= 1e-5;
-                    B_f(c) >= 1e-5;
-                    A_c_n(c) >= 1e-5;
-                    B_c_n(c) >= 1e-5;
-
                         R_f(c) <= log2(1 + 1 ./ (A_f_prev(c) * B_f_prev(c))) -  ...
                         (log2(exp(1)) * 1 ./ (A_f_prev(c) * (1 + A_f_prev(c) * B_f_prev(c)))) * (A_f(c) - A_f_prev(c)) - ...
                         (log2(exp(1)) * 1 ./ (B_f_prev(c) * (1 + A_f_prev(c) * B_f_prev(c)))) * (B_f(c) - B_f_prev(c));
@@ -81,13 +74,6 @@ function [W_opt, A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_pr
                         R_c_n(c) <= log2(1 + 1 ./ (A_c_prev_n(c) * B_c_prev_n(c))) - ...
                         (log2(exp(1)) *1 ./  (A_c_prev_n(c) * (1 + A_c_prev_n(c) * B_c_prev_n(c)))) * (A_c_n(c) - A_c_prev_n(c)) - ...
                         (log2(exp(1)) * 1 ./  (B_c_prev_n(c) * (1 + A_c_prev_n(c) * B_c_prev_n(c)))) * (B_c_n(c) - B_c_prev_n(c)); 
-
-
-   
-                    % R_f(c)<=taylor_approx_far(c);
-                    % R_n(c) <=taylor_approx_n(c);
-                    % R_c_n(c)<=taylor_approx_backscatter_n(c);
-
 
                     R_f(c) >= R_f_min;
                     R_n(c) >= R_n_min;
@@ -139,12 +125,7 @@ function [W_opt, A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_pr
             end
 
     cvx_end
-
-        disp(R_n);
-        disp(R_f);
-        disp(R_c_n);
-        % disp(W)
- 
+    
         obj_prev = cvx_optval;
         A_n_opt = A_n;
         B_n_opt = B_n;
@@ -154,7 +135,4 @@ function [W_opt, A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_pr
         B_c_n_opt = B_c_n;
         W_opt = W;
         status = cvx_status;
-
-
-
 end

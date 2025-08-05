@@ -12,4 +12,4 @@ function [BS_array, RIS_array] = generate_arrays(para)
     end
     RIS_array = RIS_array- [(para.RIS_size(1)+1)/2, 0, 0];
     
-    end
+end

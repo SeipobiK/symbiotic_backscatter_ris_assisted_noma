@@ -1,17 +1,17 @@
 % Simulation with Monte Carlo for BD-RIS-assisted MISO-NOMA System
-% Author: Xidong Mu (base) | Modified by ChatGPT
+% Author: Kgomotjo Seipobi
 % Date: 2025-07-02
-addpath(genpath('/home/morolong/Documents/Msc'))
+addpath(genpath('/home/morolong/Documents/Msc/symbiotic_backscatter_ris_assisted_noma'));
 para = para_init();
 max_inner_iters=20;
-max_iter=20;
+% max_iter=15;
 alpha_n = para.alpha_k_n; % Near user path loss factor
 alpha_f = para.alpha_k_f; % Far user path loss factor
 % close all; 
 clear all; clc;
 rng(42); % For reproducibility
 MC_MAX = 1;  % Monte Carlo simulations
-max_iter = 50;  % Maximum iterations for each Monte Carlo run
+max_iter = 30;  % Maximum iterations for each Monte Carlo run
 obj_montecarlo = zeros(1, MC_MAX); % Store objective values
 obj_history = zeros(max_iter, MC_MAX);  % Store objectives per iteration
 converg_it = zeros(max_iter, MC_MAX);  % Store objectives per iteration
@@ -24,10 +24,10 @@ for mc = 1:MC_MAX
     disp(['--- Monte Carlo Iteration ', num2str(mc), ' ---']);
     
     para = para_init();
-    K = 3;
+    K  = para.K;
     N = para.N;
     M = para.M;
-    numClusters = 3;
+    numClusters = para.K; % Number of clusters;
     u = exp(1i * pi * (2 * rand(N, 1)));  % Single random phase shift vector (N x 1)
     Theta = diag(u); 
 
@@ -92,7 +92,7 @@ for mc = 1:MC_MAX
     %Algorithm 2: Find a feasible solution
     % Find feasible starting point
     [W_opt, A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt, obj_prev, cvx_status, converged] = ...
-    find_feasible_solution(para, W_init, H_n, H_f, H_nc, H_fc, A_n_prev, B_n_prev, A_f_prev, B_f_prev, A_c_prev_n,...
+    find_feasible_solution(para, H_n, H_f, H_nc, H_fc, A_n_prev, B_n_prev, A_f_prev, B_f_prev, A_c_prev_n,...
      B_c_prev_n,max_inner_iters);
 
     A_n_prev = A_n_opt; B_n_prev = B_n_opt; 
@@ -110,7 +110,7 @@ for mc = 1:MC_MAX
 
     % Algorithm 3: Active beamforming optimization
     [W_opt, A_n_prev, B_n_prev, A_f_prev, B_f_prev, A_c_prev_n, B_c_prev_n, obj_history_mc, converged] = ...
-    active_Bf_opt(para, W_init, H_n, H_f, H_nc, H_fc, A_n_prev, B_n_prev, A_f_prev, B_f_prev, A_c_prev_n, B_c_prev_n, max_iter, mc);
+    active_Bf_opt(para, H_n, H_f, H_nc, H_fc, A_n_prev, B_n_prev, A_f_prev, B_f_prev, A_c_prev_n, B_c_prev_n, max_iter, mc);
     disp(cvx_status);
 
     if ~converged
@@ -141,47 +141,74 @@ for mc = 1:MC_MAX
     A_n_prev = ones(K,1); B_n_prev = ones(K,1)*1e-0;
     A_f_prev = ones(K,1)*1e-0; B_f_prev = ones(K,1);
     A_c_prev_n = ones(K,1); B_c_prev_n = ones(K,1)*1e-0;
-    V_eignemax=zeros(N, N);
+    V_eignemax=zeros(N, 1);
     W_init = zeros(M, numClusters);
     for c = 1:numClusters
         W_init(:, c) = mrt_beamforming(para, H_n{c});
     end
 
-   [V_opt,A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_prev,status] = feasible_passive(para,W_init,G_all, g_1_all,...
-    g_2_all,g_b_all,f1_all,f2_all,A_n_prev, B_n_prev, A_f_prev, B_f_prev,  A_c_prev_n, B_c_prev_n,epsln_1,V_eignemax);
+   [V_opt,A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_prev,status] = feasible_passive(para,w_k,G_all, g_1_all,...
+     g_2_all,g_b_all,f1_all,f2_all,A_n_prev, B_n_prev, A_f_prev, B_f_prev,  A_c_prev_n, B_c_prev_n,epsln_1,V_eignemax);
 
     A_n_prev = A_n_opt; B_n_prev = B_n_opt; 
     A_f_prev = A_f_opt; B_f_prev = B_f_opt; 
     A_c_prev_n = A_c_n_opt;  B_c_prev_n = B_c_n_opt; 
 
-%     % disp(size(B_c_prev_n));
+    %disp(cvx_status);
+    [V_opt_, A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt, obj_prev, status] = relaxed_passive(para, w_k, G_all, g_1_all, ...
+     g_2_all, g_b_all, f1_all, f2_all, A_n_prev, B_n_prev, A_f_prev, B_f_prev, A_c_prev_n, B_c_prev_n);
+    disp(status);
+    current_eig_ = eig(V_opt_);
+    sorted_eig_ = sort(current_eig_, 'descend');
+
+    [V_max, lambda_max] = max_eigVect(V_opt_);
+     
+
+     disp(['Max eigenvalue: ', num2str(lambda_max)]);
+     disp(['Corresponding eigenvector: ', num2str(sorted_eig_')]);
+     disp(trace(V_opt_));
 
 
-%     epsln_1=0;
-    
-    [V_opt,A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_prev,cvx_status] = Passive_BF(para,w_k,G_all, g_1_all,...
-    g_2_all,g_b_all,f1_all,f2_all,A_n_prev, B_n_prev, A_f_prev, B_f_prev,  A_c_prev_n, B_c_prev_n,epsln_1,V_eignemax);
 
-%     disp(cvx_status);
+    obj_history = zeros(max_iter, 1);
+    V_eignemaxx = zeros(N,max_iter);
+    U_opt = zeros(N,N,max_iter);
+    U_opt(:,:,1) = V_opt_;
+    [V_max, lambda_max] = max_eigVect(V_opt);
+    Delta = zeros(max_iter,1); 
+    e_new = zeros(max_iter,1);
+    Delta(1)=0.0000001;
+    max_eigenvalue=zeros(max_iter, 1);
+    V_eignemaxx(:,1)=V_max;
+    e_new(1) = min(1, lambda_max/trace(U_opt(:,:,1)) + Delta(1));
 
-%     obj_history = zeros(max_iter, 1);
 
-    for m=1:20
 
-      [V_opt,A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_prev,cvx_status] = Passive_BF(para,W_init,G_all, g_1_all,...
-          g_2_all,g_b_all,f1_all,f2_all,A_n_prev, B_n_prev, A_f_prev, B_f_prev,  A_c_prev_n, B_c_prev_n,epsln_1,V_eignemax);
+    for m=2:max_iter
 
-        if ~strcmp(cvx_status, 'Solved')
-            warning('Update failed at MC %d iteration %d', mc, m);
-            disp(cvx_status);
-            break;
+      [V_opt,A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_prev,cvx_status] = Passive_BF(para,w_k,G_all, g_1_all,...
+          g_2_all,g_b_all,f1_all,f2_all,A_n_prev, B_n_prev, A_f_prev, B_f_prev,  A_c_prev_n, B_c_prev_n,V_eignemaxx(:,m-1),e_new(m-1));
+
+        if strcmp(cvx_status, 'Solved')
+            % Update variables
+            A_n_prev = A_n_opt; B_n_prev = B_n_opt; 
+            A_f_prev = A_f_opt; B_f_prev = B_f_opt; 
+            A_c_prev_n = A_c_n_opt;  B_c_prev_n = B_c_n_opt; 
+            [V_max, lambda_max] = max_eigVect(V_opt);
+            U_opt(:,:,m) = V_opt;
+            max_eigenvalue(m)=lambda_max;
+            V_eignemaxx(:,m)=V_max;
+            obj_history(m) = obj_prev;
+            current_eig_ = eig(V_opt);
+            sorted_eig_ = sort(current_eig_, 'descend');
+            fprintf('%.2e\n', sorted_eig_');
+            disp('max_eigenvalue');
+            disp(max_eigenvalue(m));
+            
         end
+        disp(trace(U_opt(:,:,m)));
 
-        % Update variables
-        A_n_prev = A_n_opt; B_n_prev = B_n_opt; 
-        A_f_prev = A_f_opt; B_f_prev = B_f_opt; 
-        A_c_prev_n = A_c_n_opt;  B_c_prev_n = B_c_n_opt; 
-        obj_history(m) = obj_prev;disp(D);
+        e_new(m) = min(1, max_eigenvalue(m)/trace(U_opt(:,:,m)) + Delta(1));
 
         % Display progress
         disp(['Iteration: ', num2str(m), ' | Objective: ', sprintf('%.10f', obj_prev)]);
@@ -193,28 +220,28 @@ for mc = 1:MC_MAX
             disp(['MC ', num2str(mc), ' converged at iteration ', num2str(m)]);
             converged = true;
             obj_history = obj_history(1:m);  % Trim unused entries
-            break;
+            continue;
         end
     end
+    disp(e_new);
+    % current_eig_ = eig(V_opt);
+    % sorted_eig_ = sort(current_eig, 'descend');
 
-    current_eig_ = eig(V_opt);
-    sorted_eig_ = sort(current_eig, 'descend');
-
-    disp('Eigenvalues of V_opt:');
+    % disp('Eigenvalues of V_opt:');
     
-    % [V_opt ,A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_prev,converged] =passive_BF_opt(para,w_k,G_all, g_1_all,...
-    % g_2_all,g_b_all,f1_all,f2_all, A_n_prev, B_n_prev, A_f_prev, B_f_prev, A_c_prev_n, B_c_prev_n, max_iter, mc);
+    % % % [V_opt ,A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_prev,converged] =passive_BF_opt(para,w_k,G_all, g_1_all,...
+    % % % g_2_all,g_b_all,f1_all,f2_all, A_n_prev, B_n_prev, A_f_prev, B_f_prev, A_c_prev_n, B_c_prev_n, max_iter, mc);
 
-    % disp(w_k(:,3));
-    % disp(max(diag(D)));    
+    % % % disp(w_k(:,3));
+    % % % disp(max(diag(D)));    
 
     % [V,D]= eig(V_opt);
     % [max_eigenvalue, index] = max(diag(D)); % The diagonal of D contains the eigenvalues.
-    fprintf('%.2e\n', sorted_eig);
-    disp('Eigenvalues of W_opt:');
+    % fprintf('%.2e\n', sorted_eig);
+    % disp('Eigenvalues of W_opt:');
 
-    fprintf('%.2e\n', sorted_eig_');
-    % disp(max(diag(D)));
+    % fprintf('%.2e\n', sorted_eig_');
+    % % disp(max(diag(D)));
 
 end
 toc
