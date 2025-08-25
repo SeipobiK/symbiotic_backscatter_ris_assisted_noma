@@ -204,49 +204,49 @@ parfor mc = 1:para.MC_MAX
 
 
 
-                    % ====================Active BF===================================================================================================
+                    % % ====================Active BF===================================================================================================
 
-                    disp(['------------ Inner Iteration ', num2str(tau_1), ' -------------']);
-                        % %   Active BF taylor points
-                    A_n_prev = ones(K,1); B_n_prev = ones(K,1)*1e-0;
-                    A_f_prev = ones(K,1)*1e-0; B_f_prev = ones(K,1);
-                    A_c_prev_n = ones(K,1); B_c_prev_n = ones(K,1)*1e-0;
+                    % disp(['------------ Inner Iteration ', num2str(tau_1), ' -------------']);
+                    %     % %   Active BF taylor points
+                    % A_n_prev = ones(K,1); B_n_prev = ones(K,1)*1e-0;
+                    % A_f_prev = ones(K,1)*1e-0; B_f_prev = ones(K,1);
+                    % A_c_prev_n = ones(K,1); B_c_prev_n = ones(K,1)*1e-0;
 
-                    [~,A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_prev,status,converged] = ...
-                        find_feasible_solution(para,Theta,G_all, g_1_all,...
-                        g_2_all,g_b_all,f1_all,f2_all, A_n_prev, B_n_prev, A_f_prev, B_f_prev, A_c_prev_n, B_c_prev_n, max_feasible, mc);
+                    % [~,A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_prev,status,converged] = ...
+                    %     find_feasible_solution(para,Theta,G_all, g_1_all,...
+                    %     g_2_all,g_b_all,f1_all,f2_all, A_n_prev, B_n_prev, A_f_prev, B_f_prev, A_c_prev_n, B_c_prev_n, max_feasible, mc);
 
                                 
-                    if ~converged
-                        break;
-                    end
+                    % if ~converged
+                    %     break;
+                    % end
 
-                    % Update Taylor points
-                    A_n_prev = A_n_opt; B_n_prev = B_n_opt; 
-                    A_f_prev = A_f_opt; B_f_prev = B_f_opt; 
-                    A_c_prev_n = A_c_n_opt;  B_c_prev_n = B_c_n_opt; 
-
-                    
-                    [W_opt, A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_op, obj_history_,obj_history_mc, converged,cvx_status] = ...
-                    active_Bf_opt(para,Theta,G_all, g_1_all,...
-                    g_2_all,g_b_all,f1_all,f2_all, A_n_prev, B_n_prev, A_f_prev, B_f_prev, A_c_prev_n, B_c_prev_n, max_iter, mc);
-                    % obj_history_activeBF(:, tau_1) = obj_history_(1:max_iter);
-
+                    % % Update Taylor points
                     % A_n_prev = A_n_opt; B_n_prev = B_n_opt; 
                     % A_f_prev = A_f_opt; B_f_prev = B_f_opt; 
                     % A_c_prev_n = A_c_n_opt;  B_c_prev_n = B_c_n_opt; 
 
-                    if converged
-                        obj_history_all(:,mc)=obj_history_;
-                    end
+                    
+                    % [W_opt, A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_op, obj_history_,obj_history_mc, converged,cvx_status] = ...
+                    % active_Bf_opt(para,Theta,G_all, g_1_all,...
+                    % g_2_all,g_b_all,f1_all,f2_all, A_n_prev, B_n_prev, A_f_prev, B_f_prev, A_c_prev_n, B_c_prev_n, max_iter, mc);
+                    % % obj_history_activeBF(:, tau_1) = obj_history_(1:max_iter);
 
-                    % Extract Soln
-                    for k = 1:K
-                        [W_max,max_eigenvalue_w]=max_eigVect(W_opt(:,:,k));
-                        w_k(:, k) = sqrt(max_eigenvalue_w)*W_max;
-                    end
+                    % % A_n_prev = A_n_opt; B_n_prev = B_n_opt; 
+                    % % A_f_prev = A_f_opt; B_f_prev = B_f_opt; 
+                    % % A_c_prev_n = A_c_n_opt;  B_c_prev_n = B_c_n_opt; 
 
-                    % ====================Active  BF====================================================================================================
+                    % if converged
+                    %     obj_history_all(:,mc)=obj_history_;
+                    % end
+
+                    % % Extract Soln
+                    % for k = 1:K
+                    %     [W_max,max_eigenvalue_w]=max_eigVect(W_opt(:,:,k));
+                    %     w_k(:, k) = sqrt(max_eigenvalue_w)*W_max;
+                    % end
+
+                    % % ====================Active  BF====================================================================================================
 
 
 
@@ -257,27 +257,27 @@ parfor mc = 1:para.MC_MAX
                 %     % Sequential constraint relaxation Algorithm for  obtaining the optimal passive BF
                 %     % Solve the relaxed problem(P2.2b)
                 %     % disp(tau_1);
-                %     A_n_prev_p = ones(K,1); B_n_prev_p = ones(K,1)*1e-0;
-                %     A_f_prev_p = ones(K,1)*1e-0; B_f_prev_p = ones(K,1);
-                %     A_c_prev_n_p = ones(K,1); B_c_prev_n_p = ones(K,1)*1e-0;
+                    A_n_prev_p = ones(K,1); B_n_prev_p = ones(K,1)*1e-0;
+                    A_f_prev_p = ones(K,1)*1e-0; B_f_prev_p = ones(K,1);
+                    A_c_prev_n_p = ones(K,1); B_c_prev_n_p = ones(K,1)*1e-0;
 
-                %     [V_opt_feasible,A_n_opt_p, B_n_opt_p, A_f_opt_p, B_f_opt_p, A_c_n_opt_p, B_c_n_opt_p,obj_prev,status] = feasible_passive(para,w_k,G_all, g_1_all,...
-                %     g_2_all,g_b_all,f1_all,f2_all,A_n_prev_p, B_n_prev_p, A_f_prev_p, B_f_prev_p,  A_c_prev_n_p, B_c_prev_n_p);
+                    [V_opt_feasible,A_n_opt_p, B_n_opt_p, A_f_opt_p, B_f_opt_p, A_c_n_opt_p, B_c_n_opt_p,obj_prev,status] = feasible_passive(para,w_k,G_all, g_1_all,...
+                    g_2_all,g_b_all,f1_all,f2_all,A_n_prev_p, B_n_prev_p, A_f_prev_p, B_f_prev_p,  A_c_prev_n_p, B_c_prev_n_p);
 
-                %     % Update Taylor points
-                %     A_n_prev_p = A_n_opt_p; B_n_prev_p = B_n_opt_p; 
-                %     A_f_prev_p = A_f_opt_p; B_f_prev_p = B_f_opt_p; 
-                %     A_c_prev_n_p = A_c_n_opt_p;  B_c_prev_n_p = B_c_n_opt_p;
-                %     [V_opt,A_n_opt_p, B_n_opt_p, A_f_opt_p, B_f_opt_p, A_c_n_opt_p, B_c_n_opt_p,obj_history,obj_history_mc,converged] =passive_BF_opt(para,w_k,G_all, g_1_all,...
-                %     g_2_all,g_b_all,f1_all,f2_all, A_n_prev_p, B_n_prev_p, A_f_prev_p, B_f_prev_p,  A_c_prev_n_p, B_c_prev_n_p, max_iter, mc);
+                    % Update Taylor points
+                    A_n_prev_p = A_n_opt_p; B_n_prev_p = B_n_opt_p; 
+                    A_f_prev_p = A_f_opt_p; B_f_prev_p = B_f_opt_p; 
+                    A_c_prev_n_p = A_c_n_opt_p;  B_c_prev_n_p = B_c_n_opt_p;
+                    [V_opt,A_n_opt_p, B_n_opt_p, A_f_opt_p, B_f_opt_p, A_c_n_opt_p, B_c_n_opt_p,obj_history,obj_history_mc,converged] =passive_BF_opt(para,w_k,G_all, g_1_all,...
+                    g_2_all,g_b_all,f1_all,f2_all, A_n_prev_p, B_n_prev_p, A_f_prev_p, B_f_prev_p,  A_c_prev_n_p, B_c_prev_n_p, max_iter, mc);
 
-                %     % Update Taylor points
-                %     % A_n_prev_p = A_n_opt_p; B_n_prev_p = B_n_opt_p; 
-                %     % A_f_prev_p = A_f_opt_p; B_f_prev_p = B_f_opt_p; 
-                %     % A_c_prev_n_p = A_c_n_opt_p;  B_c_prev_n_p = B_c_n_opt_p;
-                %     % obj_history_passiveBF(:, tau_1) = obj_history(1:max_iter);
-                %     % Store the objective history for this MC run
-                %     % Store the results properly
+                    % Update Taylor points
+                    % A_n_prev_p = A_n_opt_p; B_n_prev_p = B_n_opt_p; 
+                    % A_f_prev_p = A_f_opt_p; B_f_prev_p = B_f_opt_p; 
+                    % A_c_prev_n_p = A_c_n_opt_p;  B_c_prev_n_p = B_c_n_opt_p;
+                    % obj_history_passiveBF(:, tau_1) = obj_history(1:max_iter);
+                    % Store the objective history for this MC run
+                    % Store the results properly
 
 
                 %     % % Extract Soln

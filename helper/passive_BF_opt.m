@@ -10,7 +10,7 @@ function [V_opt,A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_his
     N=para.N;
 
      % Solve the relaxed problem
-    [V_opt_init,A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_curr,cvx_status] = relaxed_passive(para,w_k,G_all, g_1_all,...
+    [V_opt_init,A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_curr,status] = relaxed_passive(para,w_k,G_all, g_1_all,...
      g_2_all,g_b_all,f1_all,f2_all,A_n_prev, B_n_prev, A_f_prev, B_f_prev,  A_c_prev_n, B_c_prev_n);
             A_n_prev = A_n_opt; B_n_prev = B_n_opt; 
             A_f_prev = A_f_opt; B_f_prev = B_f_opt; 
@@ -42,18 +42,14 @@ function [V_opt,A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_his
     disp(step_size(1) );
     
 
-    % disp(step_size(1));
   
     
     for m = 2:max_iter
-            %  disp(A_f_prev(1));
-            %  disp(A_f_prev(2));
-            % disp(['Iteration: ', num2str(m), ' A_n_opt: ', num2str(A_n_prev')]);
-            % disp(['Iteration: ', num2str(m), ' B_n_opt: ', num2str(B_n_prev')]);
-            % disp(['Iteration: ', num2str(m), ' A_f_opt: ', num2str(A_f_prev')]);
-            % disp(['Iteration: ', num2str(m), ' B_f_opt: ', num2str(B_f_prev')]);
-            % disp(['Iteration: ', num2str(m), ' A_c_n_opt: ', num2str(A_c_prev_n')]);
-            % disp(['Iteration: ', num2str(m), ' B_c_n_opt: ', num2str(B_c_prev_n')]);
+
+        if ~strcmp(status, 'Solved')
+            warning('Update failed at MC %d iteration %d', mc, m);
+            break;
+        end
             
 
 
@@ -117,7 +113,7 @@ function [V_opt,A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_his
         % disp(max_eigenvalue_V_opt(1)/trace(U_opt(:,:,m)));
         current_ratio = max_eigenvalue_V_opt(m)/trace(U_opt(:,:,m));
 
-        relax_parameter(m) = min(1, current_ratio + 0.5*(1-current_ratio)); % 10% step
+        relax_parameter(m) = min(1, current_ratio + 0.35*(1-current_ratio)); % 10% step
 
         disp(relax_parameter(m));
 
@@ -127,7 +123,8 @@ function [V_opt,A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_his
         
 
         % Check convergence
-        if m > 1 && abs(obj_history(m) - obj_history(m-1)) < 1e-4 && strcmp(cvx_status, 'Solved') && abs(1-relax_parameter(m)) <= 1e-5
+        if m > 1 && abs(obj_history(m) - obj_history(m-1)) < 1e-3 && strcmp(cvx_status, 'Solved') && abs(1-relax_parameter(m)) <= 1e-5
+
             disp(['MC ', num2str(mc), ' converged at iteration ', num2str(m)]);
             converged = true;
             obj_history = obj_history(1:m); 
