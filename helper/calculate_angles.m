@@ -1,7 +1,7 @@
 function [angles] = calculate_angles()
     % Define coordinates
     BS = [0, 0, 15];          % Base Station [x, y, z]
-    RIS = [35, 20, 15];       % RIS [x, y, z]
+    RIS = [35, 25, 15];       % RIS [x, y, z]
     
     % Cluster 1 users [User1, User2, BD]
     users_cluster1 = [27, 4, 0; 

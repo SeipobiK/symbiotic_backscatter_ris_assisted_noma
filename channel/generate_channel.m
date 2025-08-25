@@ -44,16 +44,13 @@ end
 
 g=zeros(para.N, para.K, para.K_u);
 for i=1:3
-
     path_loss = para.pathloss(userloc(i, 1, 1));
     path_loss = sqrt(10.^( (-path_loss)/10));
     g(:,1,i)=path_loss .* (sqrt(epsilon/(epsilon+1)) * g_LOS(:,1,i) + sqrt(1/(epsilon+1)) * g_NLOS(:,1,i));
     disp(['Cluster 1 User ', num2str(i), ' Path Loss: ', num2str(path_loss)]);
-
 end
 
 for k=1:3
-
     path_loss = para.pathloss(userloc(k, 2, 1));
     path_loss = sqrt(10.^( (-path_loss)/10));
     g(:,2,k)=path_loss .* (sqrt(epsilon/(epsilon+1)) * g_LOS(:,2,k) + sqrt(1/(epsilon+1)) * g_NLOS(:,2,k));

@@ -3,15 +3,22 @@ clc;
 clear;
 close all;
 
+
 % Define coordinates
 BS = [0, 0, 15];          % Base Station (x, y, z)
-RIS = [35, 20, 15];     % Ze-RIS (x, y, z)
+RIS = [45, 45, 15];   % Ze-RIS (x, y, z)
 cluster_centers = [30, 0, 0; 40, 0, 0];  % Cluster centers (x, y, z)
 radii = [5, 5];           % Cluster radii (5m each)
 
-% Define users in each cluster [x, y, z]
-users_cluster1 = [27, 4, 0; 32, 0, 0; 30, 5, 0];  % User1, User2, BD
-users_cluster2 = [43, 4, 0; 37, 0, 0; 40, 5, 0];  % User1, User2, BD
+    % Cluster 1 users [User1, User2, BD]
+    users_cluster1 = [27, 4, 0; 
+                      32, 0, 0; 
+                      30, 5, 0];
+    
+    % Cluster 2 users [User1, User2, BD]
+    users_cluster2 = [43, 4, 0; 
+                      37, 0, 0; 
+                      40, 5, 0];
 
 % ====================== Plot Configuration ======================
 figure('Position', [100, 100, 800, 600], 'Color', 'w'); % Larger figure size
@@ -66,7 +73,7 @@ text(users_cluster2(3,1), users_cluster2(3,2), users_cluster2(3,3), ...
 
 % ====================== Adjust Axes and Legend ======================
 axis equal;
-xlim([0, 50]); ylim([-5, 25]); zlim([0, 20]);
+xlim([0, 50]); ylim([-5, 50]); zlim([0, 20]);
 legend({'Base Station (BS)', 'Reconfigurable RIS', 'Cluster Boundary', ...
     'Cluster 1 Users', 'Cluster 2 Users'}, ...
     'Location', 'northeast', 'FontSize', 10);

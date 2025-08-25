@@ -1,27 +1,30 @@
 function [values] = para_init()
     % Author: Xidong Mu (base) | Modified by Kgomotjo Seipobi
     
-    values.noise_dB = -120;% noise power in dB
+    values.noise_dB = -90;% noise power in dB
     values.noise = 10^(values.noise_dB/10); 
-    values.alpha_k_n=0.1;
+    values.alpha_k_n=0.3;
     values.alpha_k_f=0.9;
-    values.weights_n= 0.5; % weight for near user
-    values.weights_f= 0.3; % weight for far user
-    values.weights_c= 0.2; % weight for backscatter
+    values.weights_n= 1; % weight for near user
+    values.weights_f= 1; % weight for far user
+    values.weights_c= 1; % weight for backscatter
     values.K_u=3; % number of users in each cluster
+    values.scal = 10000; % scaling factor for channel matrix
+    values.MC_MAX = 1000; 
+    values.outer_iter = 1; 
     
     
     values.M = 4; % overall antennas
-    values.RIS_size = [2,15]; % reflecting elements at RIS
+    values.RIS_size = [2,10]; % reflecting elements at RIS
     values.N = values.RIS_size(1)*values.RIS_size(2); % reflecting elements at RIS
     
     values.n = 1; % equivalent noise power
-    values.K = 2; % user number
-    values.P_max = 100; % maximum transmit power in W
+    values.K = 2; % user number of clusters
+    values.P_max = 50; % maximum transmit power in W
     values.eta = 0.5; % backscatter coefficient
     values.R_min_f = 0.01; % minimum rate requirement in bps/Hz
     values.R_min_n = 0.01; % minimum backscatter rate for near user in bps/Hz
-    values.R_c_min = 0.001; % minimum backscatter rate for far user in bps/Hz
+    values.R_c_min = 0.01; % minimum backscatter rate for far user in bps/Hz
     values.nu_n = 1; % weight for near user
     
     values.nu_f = 1; % weight for far user
@@ -29,7 +32,7 @@ function [values] = para_init()
     values.max_iter = 10; % maximum iterations
     values.tol = 0.00001; % convergence tolerance
     
-    values.pathloss= @(d) 30 + 22*log10(d); % path loss with d in m
+    values.pathloss= @(d) 30 + 30*log10(d); % path loss with d in m
     
     values.rician = 10^(3/10); % rician factor
     
@@ -83,19 +86,6 @@ function [values] = para_init()
         values.userloc(i, 2, 2) = angles.RIS_AoD.cluster2(i).elevation; % elev
         values.userloc(i, 2, 3) = angles.RIS_AoD.cluster2(i).azimuth;   % az
     end
-
-    % clusters = {'cluster1', 'cluster2'};
-    % numUsers = 3;
-
-    % for c = 1:length(clusters)
-    %     clusterName = clusters{c};
-    %     for u = 1:numUsers
-    %         values.userloc(u, c, 1) = angles.RIS_AoD.(clusterName)(u).distance;  % d
-    %         values.userloc(u, c, 2) = angles.RIS_AoD.(clusterName)(u).elevation; % elev
-    %         values.userloc(u, c, 3) = angles.RIS_AoD.(clusterName)(u).azimuth;   % az
-    %     end
-    % end
-
 
 
      disp(values.userloc(1, 1, :)); % Display first user's location in cluster 1

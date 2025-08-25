@@ -10,12 +10,21 @@ function [W_opt, A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_pr
     R_c_min = para.R_c_min; % Minimum rate for backscatter user
     eta_k = para.eta; % Backscatter coefficient
     P_max = para.P_max; % Maximum transmit power
-    para.noise = para.noise * (1e+4^2);  % Noise scales with power
+    para.noise = para.noise * (para.scal)^2;  % Noise scales with power
     para.P_max = para.P_max;
     % Initialize CVX variables
-    cvx_begin  quiet
+    cvx_begin quiet sdp
         cvx_solver mosek
-        cvx_precision high
+        % cvx_precision high
+        % cvx_precision medium
+        % cvx_expert true
+        cvx_solver_settings( ...
+        'MSK_DPAR_INTPNT_TOL_PFEAS', 1e-10, ...
+        'MSK_DPAR_INTPNT_TOL_DFEAS', 1e-10, ...
+        'MSK_DPAR_INTPNT_TOL_REL_GAP', 1e-10 ...
+       );
+        cvx_solver_settings('MSK_DPAR_DATA_TOL_X', 1e-10); % Tighter tolerance
+        cvx_solver_settings('MSK_DPAR_OPTIMIZER_MAX_TIME', 60); % More time
 
         variable W(M,M,numClusters) Hermitian semidefinite
         variable A_n(numClusters) nonnegative % Slack variable for near users
@@ -50,12 +59,19 @@ function [W_opt, A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_pr
                 % delta_g>=1e-6-B_c_n(c);
 
                 % Ensure that the slack variables are positive
-                A_n(c) + delta_g >=1e-7; 
-                B_n(c) + delta_g >= 1e-7;
-                A_f(c) + delta_g>= 1e-7;
-                B_f(c) + delta_g>= 1e-7;
-                A_c_n(c) + delta_g>= 1e-7;
-                B_c_n(c) + delta_g>= 1e-7;      
+                A_n(c) + delta_g >=1e-4; 
+                B_n(c) + delta_g >= 1e-4;
+                A_f(c) + delta_g>= 1e-4;
+                B_f(c) + delta_g>= 1e-4;
+                A_c_n(c) + delta_g>= 1e-4;
+                B_c_n(c) + delta_g>= 1e-4;  
+                
+                A_n(c) + delta_g <=1e+3; 
+                B_n(c) + delta_g <= 1e+3;
+                A_f(c) + delta_g <= 1e+3;
+                B_f(c) + delta_g <= 1e+3;
+                A_c_n(c) + delta_g <= 1e+3;
+                B_c_n(c) + delta_g <= 1e+3;  
 
                 taylor_approx_far(c) = log2(1 + inv_pos(A_f_prev(c) * B_f_prev(c))) -  ...
                                     (log2(exp(1)) * inv_pos(A_f_prev(c) * (1 + A_f_prev(c) * B_f_prev(c)))) * (A_f(c) - A_f_prev(c)) - ...
@@ -86,7 +102,6 @@ function [W_opt, A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_pr
                     inter_cluster_interference_near = 0;
                     inter_cluster_interference_far = 0;
                     inter_cluster_interference_near_b=0;
-                    inter_cluster_interference_far_b=0;
                     for j = 1:numClusters
                         if j ~= c
                             % Near user inter cluster interference
@@ -98,9 +113,7 @@ function [W_opt, A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_pr
 
                             inter_cluster_interference_near_b= inter_cluster_interference_near_b + ...
                                 real(trace(W(:,:,j)  * H_n_c{c}' * H_n_c{c})); 
-                            
-                            inter_cluster_interference_far_b= inter_cluster_interference_far_b + ...
-                                real(trace(W(:,:,j) * H_f_c{c}' * H_f_c{c})); 
+
                             
                         end
 
@@ -139,8 +152,7 @@ function [W_opt, A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_pr
     cvx_end
 
     % Return optimized results
-    obj_prev = cvx_optval; % Store the objective value for later use
-    % disp(taylor_approx_far);
+    obj_prev = cvx_optval; 
     A_n_opt = A_n;
     B_n_opt = B_n;
     A_f_opt = A_f;
@@ -149,8 +161,4 @@ function [W_opt, A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_pr
     B_c_n_opt = B_c_n;
     W_opt = W;
     status = cvx_status;
-    % disp(delta_g);
-
-   
-
 end

@@ -10,24 +10,22 @@ function [W_opt, A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_pr
     R_c_min = para.R_c_min; % Minimum rate for backscatter user
     eta_k = para.eta; % Backscatter coefficient
     P_max = para.P_max; % Maximum transmit power
-    obj_prev = 0; % Previous objective value
-    para.noise = para.noise * (1e+4)^2;  % Noise scales with power
+    noise = para.noise * (para.scal)^2;  % Noise scales with power
     para.P_max = para.P_max;
 
 
 
 
-    cvx_begin  quiet sdp
-        % cvx_solver sedumi
+    cvx_begin quiet    sdp
         cvx_solver mosek
-        % cvx_precision best
+        % cvx_precision medium
         % cvx_precision high
-        cvx_precision high
-        cvx_solver_settings( ...
-        'MSK_DPAR_INTPNT_TOL_PFEAS', 1e-14, ...
-        'MSK_DPAR_INTPNT_TOL_DFEAS', 1e-14, ...
-        'MSK_DPAR_INTPNT_TOL_REL_GAP', 1e-14 ...
-       );
+        % cvx_solver_settings('MSK_DPAR_INTPNT_TOL_PFEAS', 1e-10);
+        % cvx_solver_settings('MSK_DPAR_INTPNT_TOL_DFEAS', 1e-10);
+        % cvx_solver_settings('MSK_DPAR_INTPNT_TOL_INFEAS', 1e-10);
+        % cvx_solver_settings('MSK_DPAR_INTPNT_TOL_REL_GAP', 1e-10);
+        % cvx_solver_settings('MSK_DPAR_DATA_TOL_X', 1e-10); % Tighter tolerance
+        % cvx_solver_settings('MSK_DPAR_OPTIMIZER_MAX_TIME', 60); % More time
 
         
         variable W(M,M,numClusters) Hermitian semidefinite
@@ -42,10 +40,6 @@ function [W_opt, A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_pr
         variable R_n(numClusters)  nonnegative% Slack variable for backscatter devices at near user
         variable R_f(numClusters)  nonnegative% Slack variable for backscatter devices at near user
         variable R_c_n(numClusters)  nonnegative% Slack variable for backscatter devices at near user
-        expressions taylor_approx_far(numClusters, 1) taylor_approx_n(numClusters, 1) taylor_approx_backscatter_n(numClusters, 1)
-
-    
-
 
         % Objective function: Maximize weighted sum rate
         maximize(sum(R_n + R_f + R_c_n)) 
@@ -60,20 +54,34 @@ function [W_opt, A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_pr
 
 
             for c = 1:numClusters
-                        R_f(c) <= log2(1 + 1 ./ (A_f_prev(c) * B_f_prev(c))) -  ...
-                        (log2(exp(1)) * 1 ./ (A_f_prev(c) * (1 + A_f_prev(c) * B_f_prev(c)))) * (A_f(c) - A_f_prev(c)) - ...
-                        (log2(exp(1)) * 1 ./ (B_f_prev(c) * (1 + A_f_prev(c) * B_f_prev(c)))) * (B_f(c) - B_f_prev(c));
+                A_n(c)  >=1e-4; 
+                B_n(c)  >= 1e-4;
+                A_f(c) >= 1e-4;
+                B_f(c) >= 1e-4;
+                A_c_n(c) >= 1e-4;
+                B_c_n(c) >= 1e-4;  
+                
+                A_n(c)  <=1e+2; 
+                B_n(c)  <= 1e+2;
+                A_f(c)  <= 1e+2;
+                B_f(c)  <= 1e+2;
+                A_c_n(c)  <= 1e+2;
+                B_c_n(c)  <= 1e+2;  
+
+                    R_f(c) <= log2(1 + 1 ./ (A_f_prev(c) * B_f_prev(c))) -  ...
+                    (log2(exp(1)) * 1 ./ (A_f_prev(c) * (1 + A_f_prev(c) * B_f_prev(c)))) * (A_f(c) - A_f_prev(c)) - ...
+                    (log2(exp(1)) * 1 ./ (B_f_prev(c) * (1 + A_f_prev(c) * B_f_prev(c)))) * (B_f(c) - B_f_prev(c));
 
                     
-                        R_n(c) <= log2(1 + 1 ./ (A_n_prev(c) * B_n_prev(c))) -  ...
-                        (log2(exp(1)) * 1 ./ (A_n_prev(c) * (1 + A_n_prev(c) * B_n_prev(c)))) * (A_n(c) - A_n_prev(c)) - ...
-                        (log2(exp(1)) * 1 ./ (B_n_prev(c) * (1 + A_n_prev(c) * B_n_prev(c)))) * (B_n(c) - B_n_prev(c));
+                    R_n(c) <= log2(1 + 1 ./ (A_n_prev(c) * B_n_prev(c))) -  ...
+                    (log2(exp(1)) * 1 ./ (A_n_prev(c) * (1 + A_n_prev(c) * B_n_prev(c)))) * (A_n(c) - A_n_prev(c)) - ...
+                    (log2(exp(1)) * 1 ./ (B_n_prev(c) * (1 + A_n_prev(c) * B_n_prev(c)))) * (B_n(c) - B_n_prev(c));
 
 
 
-                        R_c_n(c) <= log2(1 + 1 ./ (A_c_prev_n(c) * B_c_prev_n(c))) - ...
-                        (log2(exp(1)) *1 ./  (A_c_prev_n(c) * (1 + A_c_prev_n(c) * B_c_prev_n(c)))) * (A_c_n(c) - A_c_prev_n(c)) - ...
-                        (log2(exp(1)) * 1 ./  (B_c_prev_n(c) * (1 + A_c_prev_n(c) * B_c_prev_n(c)))) * (B_c_n(c) - B_c_prev_n(c)); 
+                    R_c_n(c) <= log2(1 + 1 ./ (A_c_prev_n(c) * B_c_prev_n(c))) - ...
+                    (log2(exp(1)) *1 ./  (A_c_prev_n(c) * (1 + A_c_prev_n(c) * B_c_prev_n(c)))) * (A_c_n(c) - A_c_prev_n(c)) - ...
+                    (log2(exp(1)) * 1 ./  (B_c_prev_n(c) * (1 + A_c_prev_n(c) * B_c_prev_n(c)))) * (B_c_n(c) - B_c_prev_n(c)); 
 
                     R_f(c) >= R_f_min;
                     R_n(c) >= R_n_min;
@@ -82,7 +90,6 @@ function [W_opt, A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_pr
                     inter_cluster_interference_near = 0;
                     inter_cluster_interference_far = 0;
                     inter_cluster_interference_near_b=0;
-                    inter_cluster_interference_far_b=0;
                     for j = 1:numClusters
                         if j ~= c
                             % Near user inter cluster interference  
@@ -93,46 +100,35 @@ function [W_opt, A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_pr
                                 real(trace(W(:,:,j) * H_f{c}' * H_f{c})); 
 
                             inter_cluster_interference_near_b= inter_cluster_interference_near_b + ...
-                                real(trace(W(:,:,j)* H_n_c{c}' * H_n_c{c})); 
-                            
-                            inter_cluster_interference_far_b= inter_cluster_interference_far_b + ...
-                                real(trace(W(:,:,j) * H_f_c{c}' * H_f_c{c})); 
-                            
+                                real(trace(W(:,:,j)* H_n_c{c}' * H_n_c{c}));          
                         end
 
                     end
 
-                        % Define slack variables based on cascaded channel
+                    inv_pos(A_n(c)) <= real(trace(W(:,:,c) * H_n{c}' * H_n{c})) * alpha_n;
 
-                    inv_pos(A_n(c)) <= real(trace(W(:,:,c) * H_n{c}' * H_n{c})) * alpha_n; % Near user
-
-                     % inter cluster interference  + backscatter interference + noise power
                     B_n(c) >=inter_cluster_interference_near + ...
-                            real(trace(W(:,:,c) * H_n_c{c}' * H_n_c{c})) * eta_k + para.noise;
-
-                        
+                            real(trace(W(:,:,c) * H_n_c{c}' * H_n_c{c})) * eta_k + noise;
+        
                     inv_pos(A_f(c)) <= real(trace(W(:,:,c) * H_f{c}' * H_f{c})) * alpha_f;
-
 
                     B_f(c) >= inter_cluster_interference_far + ...
                             real(trace(W(:,:,c) * H_f{c}' * H_f{c}))  * alpha_n + ...
-                            real(trace(W(:,:,c) * H_f_c{c}' * H_f_c{c}))   * eta_k + para.noise;
-
+                            real(trace(W(:,:,c) * H_f_c{c}' * H_f_c{c}))   * eta_k + noise;
 
                     inv_pos(A_c_n(c)) <= real(trace(W(:,:,c) * H_n_c{c}' * H_n_c{c})) * eta_k;
 
-                    B_c_n(c) >= inter_cluster_interference_near_b + para.noise;
+                    B_c_n(c) >= inter_cluster_interference_near_b + noise;
             end
-
     cvx_end
+    obj_prev = cvx_optval;
+    A_n_opt = A_n;
+    B_n_opt = B_n;
+    A_f_opt = A_f;
+    B_f_opt = B_f;
+    A_c_n_opt = A_c_n;
+    B_c_n_opt = B_c_n;
+    W_opt = W;
+    status = cvx_status;
     
-        obj_prev = cvx_optval;
-        A_n_opt = A_n;
-        B_n_opt = B_n;
-        A_f_opt = A_f;
-        B_f_opt = B_f;
-        A_c_n_opt = A_c_n;
-        B_c_n_opt = B_c_n;
-        W_opt = W;
-        status = cvx_status;
 end
