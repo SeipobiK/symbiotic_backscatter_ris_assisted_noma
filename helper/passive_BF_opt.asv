@@ -47,7 +47,7 @@ function [V_opt,A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_his
     for m = 2:max_iter
 
         if ~strcmp(status, 'Solved')
-            V_opt=V_opt_init;
+            V_opt_init=V_opt_init;
             warning('Update failed at MC %d iteration %d', mc, m);
             break;
         end

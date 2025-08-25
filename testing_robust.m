@@ -272,7 +272,7 @@ parfor mc = 1:para.MC_MAX
                     g_2_all,g_b_all,f1_all,f2_all, A_n_prev_p, B_n_prev_p, A_f_prev_p, B_f_prev_p,  A_c_prev_n_p, B_c_prev_n_p, max_iter, mc);
 
                     if converged
-                        obj_history_all(:,mc)=obj_history_;
+                        obj_history_all(:,mc)=obj_history;
                     end
 
                     % Update Taylor points
