@@ -271,6 +271,10 @@ parfor mc = 1:para.MC_MAX
                     [V_opt,A_n_opt_p, B_n_opt_p, A_f_opt_p, B_f_opt_p, A_c_n_opt_p, B_c_n_opt_p,obj_history,obj_history_mc,converged] =passive_BF_opt(para,w_k,G_all, g_1_all,...
                     g_2_all,g_b_all,f1_all,f2_all, A_n_prev_p, B_n_prev_p, A_f_prev_p, B_f_prev_p,  A_c_prev_n_p, B_c_prev_n_p, max_iter, mc);
 
+                    if converged
+                        obj_history_all(:,mc)=obj_history_;
+                    end
+
                     % Update Taylor points
                     % A_n_prev_p = A_n_opt_p; B_n_prev_p = B_n_opt_p; 
                     % A_f_prev_p = A_f_opt_p; B_f_prev_p = B_f_opt_p; 
