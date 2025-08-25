@@ -10,7 +10,7 @@ function [values] = para_init()
     values.weights_c= 1; % weight for backscatter
     values.K_u=3; % number of users in each cluster
     values.scal = 10000; % scaling factor for channel matrix
-    values.MC_MAX = 1000; 
+    values.MC_MAX = 10; 
     values.outer_iter = 1; 
     
     

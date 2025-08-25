@@ -461,3 +461,5 @@ delete(gcp('nocreate'));
 % %     %         'https://raw.githubusercontent.com/raacampbell/shadedErrorBar/master/shadedErrorBar.m');
 % %     %     rehash;
 % %     % end
+
+toc
