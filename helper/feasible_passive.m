@@ -33,7 +33,7 @@ function [V_opt, A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt, obj_p
         disp(['Iteration: ', num2str(m), ', Status: ', cvx_status]);
 
         % Check convergence
-        if strcmp(cvx_status, 'Solved') && abs(obj_prev) < 1e-9
+        if strcmp(cvx_status, 'Solved') && abs(obj_prev) < 1e-10
             disp('Convergence achieved.');
             disp(['Objective Value: ', num2str(obj_prev)]);
             converged = true;

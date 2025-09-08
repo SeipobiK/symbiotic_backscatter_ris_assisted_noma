@@ -1,17 +1,19 @@
 function [angles] = calculate_angles()
-    % Define coordinates
-    BS = [0, 0, 15];          % Base Station [x, y, z]
-    RIS = [35, 25, 15];       % RIS [x, y, z]
-    
-    % Cluster 1 users [User1, User2, BD]
-    users_cluster1 = [27, 4, 0; 
-                      32, 0, 0; 
-                      30, 5, 0];
+% Define coordinates
+BS = [0,0,2];          % Base Station (x, y, z)
+RIS = [5, 2, 2];   % Ze-RIS (x, y, z)
+%s           % Cluster radii (5m each)
+
+    % Cluster 2 users [User1, User2, BD]
+    users_cluster1 = [8,2,2; 
+                      8,1,2; 
+                      9,3,0];
+
     
     % Cluster 2 users [User1, User2, BD]
-    users_cluster2 = [43, 4, 0; 
-                      37, 0, 0; 
-                      40, 5, 0];
+    users_cluster2 = [8,0,2; 
+                      9,0,2; 
+                      7,0,2];
     
     % Initialize output structure
     angles = struct();

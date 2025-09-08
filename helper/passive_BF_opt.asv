@@ -12,11 +12,10 @@ function [V_opt,A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_his
      % Solve the relaxed problem
     [V_opt_init,A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_curr,status] = relaxed_passive(para,w_k,G_all, g_1_all,...
      g_2_all,g_b_all,f1_all,f2_all,A_n_prev, B_n_prev, A_f_prev, B_f_prev,  A_c_prev_n, B_c_prev_n);
+
             A_n_prev = A_n_opt; B_n_prev = B_n_opt; 
             A_f_prev = A_f_opt; B_f_prev = B_f_opt; 
             A_c_prev_n = A_c_n_opt;  B_c_prev_n = B_c_n_opt; 
-    % disp(cvx_status);
-    disp(obj_curr);
 
 
     % % Extract V_0 and relaxation parameter_0
@@ -31,23 +30,13 @@ function [V_opt,A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_his
     U_opt(:,:,1) = V_opt_init;
     obj_history(1) = obj_curr;
     initial_ratio = max_eigenvalue_V_opt(1)/trace(U_opt(:,:,1));
-    step_size(1) = 0.5*(1 - initial_ratio); % More conservative
+    step_size(1) = 0.025; % More conservative
 
     relax_parameter(1)=min(1, max_eigenvalue_V_opt(1)/trace(U_opt(:,:,1)) + step_size(1));
-
-    % disp(initial_ratio);
-
-    disp(relax_parameter(1));
-
-    disp(step_size(1) );
-    
-
-  
-    
     for m = 2:max_iter
 
         if ~strcmp(status, 'Solved')
-            V_opt_init=V_opt_init;
+            V_opt=V_opt_init;
             warning('Update failed at MC %d iteration %d', mc, m);
             break;
         end
@@ -65,6 +54,10 @@ function [V_opt,A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_his
             A_c_prev_n = A_c_n_opt;  B_c_prev_n = B_c_n_opt; 
 
             obj_history(m) = obj_prev;
+            % WSR = calculate_WSR(para, w_k, G_all, g_1_all, g_2_all, ...
+            %                         g_b_all, f1_all, f2_all, para.alpha_k_n, ...
+            %                         para.alpha_k_f, Theta);
+
             obj_history_mc(m,mc)=obj_prev;
 
             % Extract Max eigen Value and Max eigen Vector 
@@ -80,25 +73,26 @@ function [V_opt,A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_his
             current_ratio = eig_max/trace(V_opt);
             
             % % 5. Enforce monotonic improvement
-            % if m > 1 && current_ratio < relax_parameter(m-1) - 1e-6
-            %     step_size(m) = step_size(m-1)/2;
-            %     relax_parameter(m) = relax_parameter(m-1)*0.9;
-            %     disp('LARGEEEEEE');
-            %     break;
-            % end
+           % % if m > 1 && current_ratio < relax_parameter(m-1) - 1e-6
+           % %      step_size(m) = step_size(m-1)/2;
+           % %      relax_parameter(m) = relax_parameter(m-1)*0.9;
+           % %      disp('LARGEEEEEE');
+           % %  end
         
 
             % Display progress
             disp(['Iteration: ', num2str(m), ' | Objective: ', sprintf('%.10f', obj_history(m))]);
             if m > 1
                 disp(['Change: ', sprintf('%.10f', (obj_history(m) - obj_history(m-1)))]);
+                disp(current_ratio+step_size(1));
             end
             disp(['    Rank(V_', num2str(m), '): ', num2str(rank(V_opt))]);
 
-            disp(relax_parameter(m-1));
 
 
-        else
+
+        elseif (obj_history(m) - obj_history(m-1))<0 && ~strcmp(status, 'Solved')
+
             U_opt(:,:,m) = U_opt(:,:,m-1);
             max_eigenvalue_V_opt(m) = max_eigenvalue_V_opt(m-1);
             obj_history(m) = obj_history(m-1);
@@ -114,11 +108,20 @@ function [V_opt,A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_his
         % disp(max_eigenvalue_V_opt(1)/trace(U_opt(:,:,m)));
         current_ratio = max_eigenvalue_V_opt(m)/trace(U_opt(:,:,m));
 
-        relax_parameter(m) = min(1, current_ratio + 0.35*(1-current_ratio)); % 10% step
+        % relax_parameter(m) = min(1, current_ratio + 0.4*(1-current_ratio)); % 10% step
 
-        disp(relax_parameter(m));
+        relax_parameter(m) = min(0.99995, current_ratio + step_size(m)); % 10% step
+        disp(relax_parameter(m-1));
+        disp(step_size(m-1));
+
+
+        disp('---diff --');
+        fprintf('%.10f',relax_parameter(m)-relax_parameter(m-1));
+        disp('---diff --');
 
         % relax_parameter(m) = min(0.99999,max_eigenvalue_V_opt(m)/trace(U_opt(:,:,m)) + step_size(m));
+
+
 
         
         
@@ -136,10 +139,12 @@ function [V_opt,A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_his
     % disp(obj_history);
     % disp(relax_parameter);
     % fprintf('%.10f',obj_history');
-    % % fprintf('%.10f',relax_parameter');
+    fprintf('%.10f',relax_parameter);
     % disp(cvx_status);
     % disp(obj_prev);
     % fprintf('%.14f',relax_parameter(end-3));
     % disp(' + ');
     % fprintf('%.10f',relax_parameter);
+    disp('-----------------------------');
+    disp(obj_history);
 end

@@ -15,7 +15,7 @@ function [WSR, SINR_n, SINR_f, SINR_b] = compute_SR(para, w_k, G_all, g_1_all, g
     
     for c = 1:numClusters
         % Reconstruct W matrices from w_k (matching update() formulation)
-        W_k = w_k(:,c) * w_k(:,c)';
+        % W_k = w_k(:,c) * w_k(:,c)';
         
         % Calculate channels (consistent with update())
         H_n = g_1_all{c}' * Theta * G_all;

@@ -5,21 +5,20 @@ close all;
 
 
 % Define coordinates
-BS = [5,0,4];          % Base Station (x, y, z)
-RIS = [7, 4, 2];   % Ze-RIS (x, y, z)
-cluster_centers = [10, 0, 0; 16, 0, 0];  % Cluster centers (x, y, z)
-radii = [3, 3];           % Cluster radii (5m each)
+BS = [0,0,4];          % Base Station (x, y, z)
+RIS = [14, 3, 2];   % Ze-RIS (x, y, z)
+cluster_centers = [10, 0, 15; 10, 0, 0];  % Cluster centers (x, y, z)
+radii = [5, 5];           % Cluster radii (5m each)
 
+    % Cluster 1 users [User1, User2, BD]
+    users_cluster1 = [10,8,2; 
+                      13,8,2; 
+                      6, 7, 2];
     
     % Cluster 2 users [User1, User2, BD]
-    users_cluster1 = [8,2,2; 
-                      8,1,2; 
-                      9,3,0];
-    
-    % Cluster 2 users [User1, User2, BD]
-    users_cluster2 = [17,1,2; 
-                      16,3,2; 
-                      14,2,2];
+    users_cluster2 = [16,0,2; 
+                      18,0,2; 
+                      14,0,2];
 
 % ====================== Plot Configuration ======================
 figure('Position', [100, 100, 800, 600], 'Color', 'w'); % Larger figure size

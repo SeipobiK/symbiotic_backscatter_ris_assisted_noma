@@ -46,19 +46,19 @@ function [V_opt,A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_pre
         subject to
   
            for c = 1:numClusters
-                A_n(c)  >=1e-4; 
-                B_n(c)  >= 1e-4;
-                A_f(c) >= 1e-4;
-                B_f(c) >= 1e-4;
-                A_c_n(c) >= 1e-4;
-                B_c_n(c) >= 1e-4;  
+                % A_n(c)  >=1e-4; 
+                % B_n(c)  >= 1e-4;
+                % A_f(c) >= 1e-4;
+                % B_f(c) >= 1e-4;
+                % A_c_n(c) >= 1e-4;
+                % B_c_n(c) >= 1e-4;  
                 
-                A_n(c)  <=1e+2; 
-                B_n(c)  <= 1e+2;
-                A_f(c)  <= 1e+2;
-                B_f(c)  <= 1e+2;
-                A_c_n(c)  <= 1e+2;
-                B_c_n(c)  <= 1e+2;  
+                % A_n(c)  <=1e+2; 
+                % B_n(c)  <= 1e+2;
+                % A_f(c)  <= 1e+2;
+                % B_f(c)  <= 1e+2;
+                % A_c_n(c)  <= 1e+2;
+                % B_c_n(c)  <= 1e+2;  
         
                H_n{c}  = diag(g_1_all{c}')*G_all*w_k(:, c);
                H_f{c}  = diag(g_2_all{c}')*G_all*w_k(:, c);

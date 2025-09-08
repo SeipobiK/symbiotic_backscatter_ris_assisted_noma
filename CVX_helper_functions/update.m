@@ -10,7 +10,7 @@ function [W_opt, A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_pr
     R_c_min = para.R_c_min; % Minimum rate for backscatter user
     eta_k = para.eta; % Backscatter coefficient
     P_max = para.P_max; % Maximum transmit power
-    noise = para.noise * (para.scal)^2;  % Noise scales with power
+    noise = para.noise;  % Noise scales with power
     para.P_max = para.P_max;
 
 
@@ -19,7 +19,7 @@ function [W_opt, A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_pr
     cvx_begin quiet    sdp
         cvx_solver mosek
         % cvx_precision medium
-        % cvx_precision high
+        % % cvx_precision high
         % cvx_solver_settings('MSK_DPAR_INTPNT_TOL_PFEAS', 1e-10);
         % cvx_solver_settings('MSK_DPAR_INTPNT_TOL_DFEAS', 1e-10);
         % cvx_solver_settings('MSK_DPAR_INTPNT_TOL_INFEAS', 1e-10);
@@ -54,19 +54,19 @@ function [W_opt, A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_pr
 
 
             for c = 1:numClusters
-                A_n(c)  >=1e-4; 
-                B_n(c)  >= 1e-4;
-                A_f(c) >= 1e-4;
-                B_f(c) >= 1e-4;
-                A_c_n(c) >= 1e-4;
-                B_c_n(c) >= 1e-4;  
+                % A_n(c)  >=1e-4; 
+                % B_n(c)  >= 1e-4;
+                % A_f(c) >= 1e-4;
+                % B_f(c) >= 1e-4;
+                % A_c_n(c) >= 1e-4;
+                % B_c_n(c) >= 1e-4;  
                 
-                A_n(c)  <=1e+2; 
-                B_n(c)  <= 1e+2;
-                A_f(c)  <= 1e+2;
-                B_f(c)  <= 1e+2;
-                A_c_n(c)  <= 1e+2;
-                B_c_n(c)  <= 1e+2;  
+                % A_n(c)  <=1e+0; 
+                % B_n(c)  <= 1e+0;
+                % A_f(c)  <= 1e+0;
+                % B_f(c)  <= 1e+0;
+                % A_c_n(c)  <= 1e+0;
+                % B_c_n(c)  <= 1e+0;  
 
                     R_f(c) <= log2(1 + 1 ./ (A_f_prev(c) * B_f_prev(c))) -  ...
                     (log2(exp(1)) * 1 ./ (A_f_prev(c) * (1 + A_f_prev(c) * B_f_prev(c)))) * (A_f(c) - A_f_prev(c)) - ...

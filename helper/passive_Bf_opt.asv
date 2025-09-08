@@ -1,5 +1,5 @@
 function [W_opt, A_n_prev, B_n_prev, A_f_prev, B_f_prev, A_c_prev_n, B_c_prev_n, obj_history,obj_history_mc, converged,cvx_status] = ...
-    active_Bf_opt(para,Theta,G_all, g_1_all,...
+    passive_Bf_opt(para,Theta,G_all, g_1_all,...
     g_2_all,g_b_all,f1_all,f2_all, A_n_prev, B_n_prev, A_f_prev, B_f_prev, A_c_prev_n, B_c_prev_n, max_iter, mc)
 
     K=para.K;
@@ -28,14 +28,9 @@ function [W_opt, A_n_prev, B_n_prev, A_f_prev, B_f_prev, A_c_prev_n, B_c_prev_n,
 
     for m = 1:max_iter
         % Update beamforming and Taylor parameters
-        [W_opt, A_n, B_n, A_f, B_f, A_cn, B_cn, obj_curr, cvx_status] = ...
-            update(para, H_n, H_f, H_nc, H_fc, A_n_prev, B_n_prev, A_f_prev, B_f_prev, A_c_prev_n, B_c_prev_n);
+        relaxed_passive(para,w_k,G_all, g_1_all,...
+                     g_2_all,g_b_all,f1_all,f2_all,A_n_prev, B_n_prev, A_f_prev, B_f_prev,  A_c_prev_n, B_c_prev_n)
 
-        for k = 1:2
-             [W_max,max_eigenvalue_w]=max_eigVect(W_opt(:,:,k));
-             w_k(:, k) = sqrt(max_eigenvalue_w)*W_max;
-             W(:,:,k) = w_k(:,k) * w_k(:,k)'; 
-        end
         
         % [WSR, ~, ~, ~ ] = compute_SR(para, w_k, G_all, g_1_all, g_2_all, g_b_all, f1_all, f2_all, para.alpha_k_n, para.alpha_k_f, Theta);
 

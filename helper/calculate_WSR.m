@@ -6,7 +6,6 @@ function [WSR,R_n,R_f,R_c_n,A_n,B_n] = Compute_WSR(para,w_k,G_all, g_1_all,...
           N=para.N; % Number of reflecting elements at RIS
           alpha_f = para.alpha_k_f; % Far user weight
           alpha_n = para.alpha_k_n; % Near user weight
-          WSR = zeros(numClusters, 1); % Initialize WSR vector
           A_n = zeros(numClusters, 1); % Initialize A_n vector
           B_n = zeros(numClusters, 1); % Initialize B_n vector
           A_f = zeros(numClusters, 1); % Initialize A_f vector
@@ -16,7 +15,8 @@ function [WSR,R_n,R_f,R_c_n,A_n,B_n] = Compute_WSR(para,w_k,G_all, g_1_all,...
           R_n=zeros(numClusters, 1); % Initialize R_n vector
           R_f=zeros(numClusters, 1); % Initialize R_f vector    
           R_c_n=zeros(numClusters, 1); % Initialize R_c_n vector
-          noise = para.noise* (para.scal)^2;  % Noise power
+          noise = para.noise;  % Noise power
+          WSR=0;
         %   G_all=G_all*para.scal; % Scale the channel matrix
 
 
@@ -63,11 +63,11 @@ function [WSR,R_n,R_f,R_c_n,A_n,B_n] = Compute_WSR(para,w_k,G_all, g_1_all,...
                     R_f(c) = log2(1 + A_f(c) / B_f(c)); % Far user rate
                     R_n(c) = log2(1 + A_n(c) / B_n(c)); % Near user rate
                     R_c_n(c) = log2(1 + A_c_n(c) / B_c_n(c)); % Backscatter rate
+                    WSR =WSR+ R_f(c) + R_n(c) + R_c_n(c); % Weighted sum rate
+
             end
 
             % Compute WSR
-            WSR=0;
-            for c = 1:numClusters
-                WSR =WSR+ R_f(c) + R_n(c) + R_c_n(c); % Weighted sum rate
-            end
+            
+            
 end

@@ -17,9 +17,8 @@ function [V_opt,A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_pre
    cvx_begin quiet sdp
        % cvx_solver sedumi
        cvx_solver mosek
-       % cvx_precision high
     %    cvx_precision high
-       % cvx_solver_settings('MSK_IPAR_MIO_NUMERICAL_EMPHASIS_LEVEL', 2);
+    %    cvx_precision high
 
 
        %  (59h)
@@ -50,7 +49,24 @@ function [V_opt,A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_pre
                H_n{c}  = diag(g_1_all{c}')*G_all*w_k(:, c);
                H_f{c}  = diag(g_2_all{c}')*G_all*w_k(:, c);
                H_n_c{c} = diag(g_b_all{c})*G_all*f1_all{c}*w_k(:, c);
-               H_f_c{c} = diag(g_b_all{c}')*G_all*f2_all{c}*w_k(:, c); 
+               H_f_c{c} = diag(g_b_all{c}')*G_all*f2_all{c}*w_k(:, c);  
+            
+                   
+                %    taylor_approx_far(c) = log2(1 + inv_pos(A_f_prev(c) * B_f_prev(c))) -  ...
+                %     (log2(exp(1)) * inv_pos(A_f_prev(c) * (1 + A_f_prev(c) * B_f_prev(c)))) * (A_f(c) - A_f_prev(c)) - ...
+                %     (log2(exp(1)) * inv_pos(B_f_prev(c) * (1 + A_f_prev(c) * B_f_prev(c)))) * (B_f(c) - B_f_prev(c));
+
+    
+                %     taylor_approx_n(c)= log2(1 + inv_pos(A_n_prev(c) * B_n_prev(c))) -  ...
+                %                     (log2(exp(1)) * inv_pos(A_n_prev(c) * (1 + A_n_prev(c) * B_n_prev(c)))) * (A_n(c) - A_n_prev(c)) - ...
+                %                     (log2(exp(1)) * inv_pos(B_n_prev(c) * (1 + A_n_prev(c) * B_n_prev(c)))) * (B_n(c) - B_n_prev(c));
+
+
+                %         % Backscatter device constraints (Taylor approximation) at near user
+                %     taylor_approx_backscatter_n(c) = log2(1 + 1 ./ (A_c_prev_n(c) * B_c_prev_n(c))) - ...
+                %                                     (log2(exp(1)) / (A_c_prev_n(c) * (1 + A_c_prev_n(c) * B_c_prev_n(c)))) * (A_c_n(c) - A_c_prev_n(c)) - ...
+                %                                     (log2(exp(1)) / (B_c_prev_n(c) * (1 + A_c_prev_n(c) * B_c_prev_n(c)))) * (B_c_n(c) - B_c_prev_n(c));
+
 
                     R_f(c) <= log2(1 + 1 ./ (A_f_prev(c) * B_f_prev(c))) -  ...
                     (log2(exp(1)) * 1 ./ (A_f_prev(c) * (1 + A_f_prev(c) * B_f_prev(c)))) * (A_f(c) - A_f_prev(c)) - ...
@@ -77,6 +93,7 @@ function [V_opt,A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_pre
                    inter_cluster_interference_near_b=0;
                    for j = 1:numClusters
                        if j ~= c
+                
                            inter_cluster_interference_near= inter_cluster_interference_near + ...
                                real(trace(V * (diag(g_1_all{c}')*G_all*w_k(:, j)) * (diag(g_1_all{c}')*G_all*w_k(:, j))')); 
 

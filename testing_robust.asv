@@ -9,7 +9,7 @@ para = para_init();
 
 % Constants
 max_feasible = 20;
-max_iter = 20;
+max_iter = 15;
 outer_iter = para.outer_iter;
 MC_MAX = para.MC_MAX;
 K = para.K;
@@ -17,12 +17,12 @@ N = para.N;
 M = para.M;
 
 % Preallocate results
-obj_history_all = zeros(max_iter, MC_MAX);
+obj_history_all = zeros(outer_iter, MC_MAX);
 rng_seeds = randi(1e6, MC_MAX);
-% 
-% % Create parallel pool if not exists
+
+% Create parallel pool if not exists
 % if isempty(gcp('nocreate'))
-%     num_workers = 2;
+%     num_workers = min(feature('numcores'), MC_MAX);
 %     pool = parpool('local', num_workers);
 %     fprintf('Using %d workers for parallel processing\n', pool.NumWorkers);
 % else
@@ -71,27 +71,27 @@ for mc = 1:MC_MAX
         end
         w_k = mrt_beamforming(para, H_n{1}, H_n{2});
         
-        % Feasible Taylor points - Active BF
-        A_n_prev = ones(K, 1); 
-        B_n_prev = ones(K, 1) * 1e-0;
-        A_f_prev = ones(K, 1) * 1e-0; 
-        B_f_prev = ones(K, 1);
-        A_c_prev_n = ones(K, 1); 
-        B_c_prev_n = ones(K, 1) * 1e-0;
-
-        [~, A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt, ~, ~, converged] = ...
-            find_feasible_solution(para, Theta, G_all_matrix, g_1_all, g_2_all, ...
-            g_b_all, f1_all, f2_all, A_n_prev, B_n_prev, A_f_prev, B_f_prev, ...
-            A_c_prev_n, B_c_prev_n, max_feasible, mc);
-
-        if ~converged
-            continue;
-        end
+        % % Feasible Taylor points - Active BF
+        % A_n_prev = ones(K, 1); 
+        % B_n_prev = ones(K, 1) * 1e-0;
+        % A_f_prev = ones(K, 1) * 1e-0; 
+        % B_f_prev = ones(K, 1);
+        % A_c_prev_n = ones(K, 1); 
+        % B_c_prev_n = ones(K, 1) * 1e-0;
+        % 
+        % [~, A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt, ~, ~, converged] = ...
+        %     find_feasible_solution(para, Theta, G_all_matrix, g_1_all, g_2_all, ...
+        %     g_b_all, f1_all, f2_all, A_n_prev, B_n_prev, A_f_prev, B_f_prev, ...
+        %     A_c_prev_n, B_c_prev_n, max_feasible, mc);
+        % 
+        % if ~converged
+        %     continue;
+        % end
         
-        % % Update Taylor points
-        A_n_prev = A_n_opt; B_n_prev = B_n_opt; 
-        A_f_prev = A_f_opt; B_f_prev = B_f_opt; 
-        A_c_prev_n = A_c_n_opt; B_c_prev_n = B_c_n_opt;
+        % % % Update Taylor points
+        % A_n_prev = A_n_opt; B_n_prev = B_n_opt; 
+        % A_f_prev = A_f_opt; B_f_prev = B_f_opt; 
+        % A_c_prev_n = A_c_n_opt; B_c_prev_n = B_c_n_opt;
 
         % Feasible Taylor points - Passive BF
         A_n_prev_p = ones(K, 1); 
@@ -102,13 +102,9 @@ for mc = 1:MC_MAX
         B_c_prev_n_p = ones(K, 1) * 1e-0;
 
         [V_opt_feasible, A_n_opt_p, B_n_opt_p, A_f_opt_p, B_f_opt_p, ...
-         A_c_n_opt_p, B_c_n_opt_p, ~, converged] = feasible_passive(para, w_k, G_all_matrix, ...
+         A_c_n_opt_p, B_c_n_opt_p, ~, ~] = feasible_passive(para, w_k, G_all_matrix, ...
          g_1_all, g_2_all, g_b_all, f1_all, f2_all, A_n_prev_p, B_n_prev_p, ...
          A_f_prev_p, B_f_prev_p, A_c_prev_n_p, B_c_prev_n_p);
-
-         if ~converged
-            break;
-         end
 
         % Update Taylor points
         A_n_prev_p = A_n_opt_p; B_n_prev_p = B_n_opt_p; 
@@ -116,38 +112,31 @@ for mc = 1:MC_MAX
         A_c_prev_n_p = A_c_n_opt_p; B_c_prev_n_p = B_c_n_opt_p;
         
         % Outer iteration loop
-         % obj_history_mc = zeros(outer_iter, 1);
-         obj_history_mc = zeros(max_iter, 1);
+         obj_history_mc = zeros(outer_iter, 1);
         
         for tau_1 = 1:outer_iter
             % % Active BF optimization
-            [W_opt, A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_op, ...
-             obj_history_, ~, converged, ~] = active_Bf_opt(para, Theta, G_all_matrix, ...
-             g_1_all, g_2_all, g_b_all, f1_all, f2_all, A_n_prev, B_n_prev, ...
-             A_f_prev, B_f_prev, A_c_prev_n, B_c_prev_n, max_iter, tau_1);
-
-
-            % Update Taylor points and extract beamforming vectors
-            A_n_prev = A_n_opt; B_n_prev = B_n_opt; 
-            A_f_prev = A_f_opt; B_f_prev = B_f_opt; 
-            A_c_prev_n = A_c_n_opt; B_c_prev_n = B_c_n_opt;
-
-            for k = 1:K
-                [W_max, max_eigenvalue_w] = max_eigVect(W_opt(:, :, k));
-                w_k(:, k) = sqrt(max_eigenvalue_w) * W_max;
-            end
+            % [W_opt, A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_op, ...
+            %  obj_history_, ~, converged, ~] = active_Bf_opt(para, Theta, G_all_matrix, ...
+            %  g_1_all, g_2_all, g_b_all, f1_all, f2_all, A_n_prev, B_n_prev, ...
+            %  A_f_prev, B_f_prev, A_c_prev_n, B_c_prev_n, max_iter, tau_1);
+            % 
+            % 
+            % % Update Taylor points and extract beamforming vectors
+            % A_n_prev = A_n_opt; B_n_prev = B_n_opt; 
+            % A_f_prev = A_f_opt; B_f_prev = B_f_opt; 
+            % A_c_prev_n = A_c_n_opt; B_c_prev_n = B_c_n_opt;
+            % 
+            % for k = 1:K
+            %     [W_max, max_eigenvalue_w] = max_eigVect(W_opt(:, :, k));
+            %     w_k(:, k) = sqrt(max_eigenvalue_w) * W_max;
+            % end
             
             % Passive BF optimization
-            % [V_opt, A_n_opt_p, B_n_opt_p, A_f_opt_p, B_f_opt_p, A_c_n_opt_p, ...
-            %  B_c_n_opt_p, obj_history_mc, ratio, converged,cvx_status] = passive_Bf_opt(para, w_k, G_all_matrix, ...
-            %  g_1_all, g_2_all, g_b_all, f1_all, f2_all, A_n_prev_p, B_n_prev_p, ...
-            %  A_f_prev_p, B_f_prev_p, A_c_prev_n_p, B_c_prev_n_p, max_iter, mc);
-
-            [V_opt,A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_history,obj_history_mc,converged] =passive_BF_opt(para,w_k,G_all_matrix, g_1_all,...
-                g_2_all,g_b_all,f1_all,f2_all, A_n_prev, B_n_prev, A_f_prev, B_f_prev, A_c_prev_n, B_c_prev_n, max_iter,mc);
-
-
-            % [V_opt, A_n_prev, B_n_prev, A_f_prev, B_f_prev, A_c_prev_n, B_c_prev_n, obj_history,obj_history_mc, converged,cvx_status]
+            [V_opt, A_n_opt_p, B_n_opt_p, A_f_opt_p, B_f_opt_p, A_c_n_opt_p, ...
+             B_c_n_opt_p, ~, ~, converged] = passive_BF_opt(para, w_k, G_all_matrix, ...
+             g_1_all, g_2_all, g_b_all, f1_all, f2_all, A_n_prev_p, B_n_prev_p, ...
+             A_f_prev_p, B_f_prev_p, A_c_prev_n_p, B_c_prev_n_p, max_iter, tau_1);
 
 
             % Update Taylor points
@@ -177,16 +166,15 @@ for mc = 1:MC_MAX
             end
 
             % Store results
-            % obj_history_mc(tau_1) = bestWSR;
+            obj_history_mc(tau_1) = bestWSR;
          end
         
         % Store results for this MC run
         WSR = calculate_WSR(para, w_k, G_all_matrix, g_1_all, g_2_all, ...
                                     g_b_all, f1_all, f2_all, para.alpha_k_n, ...
                                     para.alpha_k_f, theta_test);
-        % obj_history_mc(tau_1) = WSR;
-        obj_history_all(:, mc) = obj_history;
-        disp(['SIZE  ',num2str(size(obj_history_all))]);
+        obj_history_mc(tau_1) = WSR;
+        obj_history_all(:, mc) = obj_history_mc;
         
     catch ME
         fprintf('Error in MC iteration %d: %s\n', mc, ME.message);
@@ -202,12 +190,8 @@ valid_runs = ~all(isnan(obj_history_all), 1);
 obj_history_valid = obj_history_all(:, valid_runs);
 avg_obj = mean(obj_history_valid, 2, 'omitnan');
 std_obj = std(obj_history_valid, 0, 2, 'omitnan');
-disp('--------obe');
+
 disp(avg_obj);
-
-
-disp('--------obe');
-% disp(ratio);
 
 
 % % Example: plot relax_parameter over iterations
@@ -217,7 +201,6 @@ disp('--------obe');
  ylabel('WSR');
  title('Convergence');
  grid on;
- xlim([1,max_iter]);
 
 % % Example: plot objective history
 % figure;

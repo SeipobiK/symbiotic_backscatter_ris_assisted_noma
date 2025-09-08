@@ -13,18 +13,21 @@ function [W_opt, A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_pr
     para.noise = para.noise * (para.scal)^2;  % Noise scales with power
     para.P_max = para.P_max;
     % Initialize CVX variables
-    cvx_begin quiet sdp
+    dump_filename = 'my_problem_dump.cbf';
+    cvx_begin  sdp dumpfile(dump_filename)
         cvx_solver mosek
         % cvx_precision high
         % cvx_precision medium
-        % cvx_expert true
-        cvx_solver_settings( ...
-        'MSK_DPAR_INTPNT_TOL_PFEAS', 1e-10, ...
-        'MSK_DPAR_INTPNT_TOL_DFEAS', 1e-10, ...
-        'MSK_DPAR_INTPNT_TOL_REL_GAP', 1e-10 ...
-       );
-        cvx_solver_settings('MSK_DPAR_DATA_TOL_X', 1e-10); % Tighter tolerance
-        cvx_solver_settings('MSK_DPAR_OPTIMIZER_MAX_TIME', 60); % More time
+        cvx_expert true
+        % cvx_solver_settings(...
+        %     'MSK_DPAR_INTPNT_TOL_REL_GAP', 1e-14, ...
+        %     'MSK_DPAR_INTPNT_TOL_PFEAS',   1e-14, ...
+        %     'MSK_DPAR_INTPNT_TOL_DFEAS',   1e-14, ...
+        %     'MSK_DPAR_INTPNT_TOL_MU_RED',  1e-14)
+        % cvx_solver_settings('MSK_DPAR_DATA_TOL_X', 1e-14); % Tighter tolerance
+        % % cvx_solver_settings('MSK_DPAR_OPTIMIZER_MAX_TIME', 60); % More time
+        cvx_solver_settings('MSK_IPAR_MIO_NUMERICAL_EMPHASIS_LEVEL', 2);
+        % cvx_solver_settings('MSK_DPAR_SIM_LU_TOL_REL_PIV', 1e-6);
 
         variable W(M,M,numClusters) Hermitian semidefinite
         variable A_n(numClusters) nonnegative % Slack variable for near users
@@ -35,10 +38,11 @@ function [W_opt, A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_pr
         variable B_c_f(numClusters) nonnegative % Slack variable for backscatter devices at far user
         variable A_c_n(numClusters) nonnegative % Slack variable for backscatter devices at near user
         variable B_c_n(numClusters) nonnegative % Slack variable for backscatter devices at near user
-        variable delta_g nonnegative % Slack variable for backscatter devices at near user
+        variable delta_g  nonnegative % Slack variable for backscatter devices at near user
         variable R_n(numClusters)  nonnegative% Slack variable for backscatter devices at near user
         variable R_f(numClusters)  nonnegative% Slack variable for backscatter devices at near user
         variable R_c_n(numClusters)  nonnegative% Slack variable for backscatter devices at near user
+        dual variable y
     
         minimise(delta_g);
 
@@ -58,13 +62,13 @@ function [W_opt, A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_pr
                 % delta_g>=1e-6-A_c_n(c);
                 % delta_g>=1e-6-B_c_n(c);
 
-                % Ensure that the slack variables are positive
-                A_n(c) + delta_g >=1e-4; 
-                B_n(c) + delta_g >= 1e-4;
-                A_f(c) + delta_g>= 1e-4;
-                B_f(c) + delta_g>= 1e-4;
-                A_c_n(c) + delta_g>= 1e-4;
-                B_c_n(c) + delta_g>= 1e-4;  
+                % % Ensure that the slack variables are positive
+                % A_n(c) + delta_g >=1e-4; 
+                % B_n(c) + delta_g >= 1e-4;
+                % A_f(c) + delta_g>= 1e-4;
+                % B_f(c) + delta_g>= 1e-4;
+                % A_c_n(c) + delta_g>= 1e-4;
+                % B_c_n(c) + delta_g>= 1e-4;  
                 
                 A_n(c) + delta_g <=1e+3; 
                 B_n(c) + delta_g <= 1e+3;
@@ -90,7 +94,7 @@ function [W_opt, A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_pr
 
 
 
-                    R_f(c)- taylor_approx_far(c)<=delta_g;
+                    R_f(c)- taylor_approx_far(c)<=delta_g : y;
                     R_n(c) - taylor_approx_n(c) <=delta_g;
                     R_c_n(c) - taylor_approx_backscatter_n(c)<=delta_g;
 
@@ -121,24 +125,26 @@ function [W_opt, A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_pr
 
                         % Define slack variables based on cascaded channel
 
-                       inv_pos(A_n(c))- real(trace(W(:,:,c)  * H_n{c}' * H_n{c})) * alpha_n<=delta_g; % Near user
+
+                       inv_pos(A_n(c))- real(trace(W(:,:,c)  * H_n{c}' * H_n{c})) * alpha_n<=delta_g; % constraint 1
+
 
                         % inter cluster interference  + backscatter interference + noise power
                        delta_g>=inter_cluster_interference_near + ...
-                                real(trace(W(:,:,c) * H_n_c{c}' * H_n_c{c})) * eta_k + para.noise - B_n(c);
+                                real(trace(W(:,:,c) * H_n_c{c}' * H_n_c{c})) * eta_k + para.noise - B_n(c); % constraint 2
 
                         
-                        inv_pos(A_f(c)) - real(trace(W(:,:,c) * H_f{c}' * H_f{c})) * alpha_f <=delta_g; 
-
+                        inv_pos(A_f(c)) - real(trace(W(:,:,c) * H_f{c}' * H_f{c})) * alpha_f <=delta_g; % constraint 3
+0
 
                        delta_g>= inter_cluster_interference_far + ...
                                 real(trace(W(:,:,c)  * H_f{c}' * H_f{c}))  * alpha_n + ...
-                                real(trace(W(:,:,c)  * H_f_c{c}' * H_f_c{c}))   * eta_k + para.noise - B_f(c) ;
+                                real(trace(W(:,:,c)  * H_f_c{c}' * H_f_c{c}))   * eta_k + para.noise - B_f(c) ; % constraint 4
 
 
-                        inv_pos(A_c_n(c)) - real(trace(W(:,:,c)  * H_n_c{c}' * H_n_c{c})) * eta_k<=delta_g;
+                       inv_pos(A_c_n(c)) - real(trace(W(:,:,c)  * H_n_c{c}' * H_n_c{c})) * eta_k<=delta_g;  % constraint 5
 
-                       delta_g>= inter_cluster_interference_near_b + para.noise - B_c_n(c) ;
+                       delta_g>= inter_cluster_interference_near_b + para.noise - B_c_n(c) ; % constraint 6
 
 
             end
@@ -161,4 +167,6 @@ function [W_opt, A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_pr
     B_c_n_opt = B_c_n;
     W_opt = W;
     status = cvx_status;
+    fprintf('Dump complete. Analyze with: mosek %s -d MSK_IPAR_ANA_DEBUG_LEVEL 2\n', dump_filename);
+
 end

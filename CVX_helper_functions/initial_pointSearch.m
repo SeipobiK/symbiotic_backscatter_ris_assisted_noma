@@ -13,11 +13,12 @@ function [V_opt,A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_pre
    para.P_max = para.P_max;
 %    scal=1e+6;
 
-   cvx_begin quiet   sdp
+   cvx_begin quiet sdp
        % cvx_solver sedumi
        cvx_solver mosek
     %    cvx_precision high
-    %    cvx_precision high
+        % cvx_precision high
+        cvx_solver_settings('MSK_IPAR_MIO_NUMERICAL_EMPHASIS_LEVEL', 2);
 
 
        %  (59h)
@@ -55,20 +56,20 @@ function [V_opt,A_n_opt, B_n_opt, A_f_opt, B_f_opt, A_c_n_opt, B_c_n_opt,obj_pre
                H_f_c{c} = diag(g_b_all{c}')*G_all*f2_all{c}*w_k(:, c);  
     
 
-                % Ensure that the slack variables are positive
-                A_n(c) + delta_p >=1e-3; 
-                B_n(c) + delta_p >= 1e-3;
-                A_f(c) + delta_p>= 1e-3;
-                B_f(c) + delta_p>= 1e-3;
-                A_c_n(c) + delta_p>= 1e-3;
-                B_c_n(c) + delta_p>= 1e-3;  
+                % % Ensure that the slack variables are positive
+                % A_n(c) + delta_p >=1e-3; 
+                % B_n(c) + delta_p >= 1e-3;
+                % A_f(c) + delta_p>= 1e-3;
+                % B_f(c) + delta_p>= 1e-3;
+                % A_c_n(c) + delta_p>= 1e-3;
+                % B_c_n(c) + delta_p>= 1e-3;  
                 
-                A_n(c) + delta_p <=1e+3; 
-                B_n(c) + delta_p <= 1e+3;
-                A_f(c) + delta_p <= 1e+3;
-                B_f(c) + delta_p <= 1e+3;
-                A_c_n(c) + delta_p <= 1e+3;
-                B_c_n(c) + delta_p <= 1e+3;            
+                % A_n(c) + delta_p <=1e+3; 
+                % B_n(c) + delta_p <= 1e+3;
+                % A_f(c) + delta_p <= 1e+3;
+                % B_f(c) + delta_p <= 1e+3;
+                % A_c_n(c) + delta_p <= 1e+3;
+                % B_c_n(c) + delta_p <= 1e+3;            
                    
                 %    taylor_approx_far(c) = log2(1 + inv_pos(A_f_prev(c) * B_f_prev(c))) -  ...
                 %     (log2(exp(1)) * inv_pos(A_f_prev(c) * (1 + A_f_prev(c) * B_f_prev(c)))) * (A_f(c) - A_f_prev(c)) - ...
